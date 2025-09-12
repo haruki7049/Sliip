@@ -12,6 +12,8 @@ natural = TT.natural Lang.haskell
 
 main :: IO ()
 main = do
+  putStrLn "Enter your number..."
+
   s <- getLine
   case parse natural "stdin" s of
     Left err -> print err
