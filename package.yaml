@@ -14,7 +14,7 @@ library:
 
 executables:
   sliip:
-    main: main.hs
+    main: Main.hs
     source-dirs: app
     ghc-options:
       - -threaded
