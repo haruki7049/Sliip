@@ -1,11 +1,11 @@
 module Sliip where
 
-import Text.Parsec (Parsec, many, (<|>))
+import Text.Parsec (Parsec, eof, many, optionMaybe, (<|>))
 import Text.Parsec.Char (alphaNum, char, letter, oneOf)
 import Text.Parsec.Language (emptyDef)
 import qualified Text.Parsec.Language as Lang (haskell)
 import Text.Parsec.Token (LanguageDef, TokenParser, caseSensitive, commentEnd, commentLine, commentStart, identLetter, identStart, makeTokenParser, nestedComments, opLetter, opStart, reservedNames, reservedOpNames)
-import qualified Text.Parsec.Token as TT (identifier, stringLiteral, symbol)
+import qualified Text.Parsec.Token as TT (identifier, stringLiteral, symbol, whiteSpace)
 
 sliipStyle :: LanguageDef st
 sliipStyle =
@@ -32,14 +32,17 @@ newtype SExpression
 data Value
   = StringLiteral String
   | Reference String
-  | SubExpr SExpression
+  | SExprV SExpression
   deriving (Show, Eq)
 
 lexer :: TokenParser ()
 lexer = makeTokenParser sliipStyle
 
 symbol :: String -> Parser String
-symbol = TT.symbol Lang.haskell
+symbol = TT.symbol lexer
+
+whitespace :: Parser ()
+whitespace = TT.whiteSpace lexer
 
 sexpr :: Parser SExpression
 sexpr = do
@@ -53,9 +56,19 @@ identifier = TT.identifier lexer
 
 value :: Parser Value
 value =
-  (SubExpr <$> sexpr)
+  (SExprV <$> sexpr)
     <|> (StringLiteral <$> stringLiteral)
     <|> (Reference <$> identifier)
 
 stringLiteral :: Parser String
-stringLiteral = TT.stringLiteral Lang.haskell
+stringLiteral = TT.stringLiteral lexer
+
+type Programs = Maybe SExpression
+
+programs :: Parser Programs
+programs = do
+  whitespace
+  expr <- optionMaybe sexpr
+  whitespace
+  eof
+  return expr
