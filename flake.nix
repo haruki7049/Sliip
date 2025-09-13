@@ -30,11 +30,15 @@
             # Nix
             programs.nixfmt.enable = true;
 
-            # Rust
-            programs.zig.enable = true;
+            # Haskell
+            programs.ormolu.enable = true;
 
-            # TOML
-            programs.taplo.enable = true;
+            # Yaml
+            programs.yamlfmt.enable = true;
+            settings.formatter.yamlfmt.options = [
+              "-conf"
+              "./.yamlfmt.yml"
+            ];
 
             # GitHub Actions
             programs.actionlint.enable = true;
@@ -49,7 +53,8 @@
 
           devShells.default = pkgs.haskellPackages.developPackage {
             root = ./.;
-            modifier = drv:
+            modifier =
+              drv:
               pkgs.haskell.lib.addBuildTools drv ([
                 # Build tools
                 pkgs.haskellPackages.stack

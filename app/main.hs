@@ -1,7 +1,7 @@
 module Main where
 
-import Text.Parsec (parse)
 import qualified Sliip (sexpr)
+import Text.Parsec (parse)
 
 main :: IO ()
 main = do

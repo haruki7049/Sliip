@@ -1,4 +1,4 @@
-name:    sliip
+name: sliip
 version: "0.0.0.0"
 
 dependencies:
@@ -17,8 +17,8 @@ executables:
     main: main.hs
     source-dirs: app
     ghc-options:
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
     dependencies:
-    - sliip
+      - sliip
