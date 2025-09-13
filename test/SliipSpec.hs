@@ -42,3 +42,12 @@ spec = do
                             Left _ -> False
                             Right v -> v == Nothing
                         )
+
+    it "parses a sexpr with some comment line" $ do
+      let input = "; hogehoge\n( hoge )\n; fuga"
+          result = parse Sliip.programs "" input
+      result
+        `shouldSatisfy` ( \r -> case r of
+                            Left _ -> False
+                            Right v -> v == Just (SExpr [Reference "hoge"])
+                        )
