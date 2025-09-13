@@ -13,7 +13,7 @@ sliipStyle =
       commentEnd = "",
       commentLine = ";",
       nestedComments = True,
-      identStart = letter <|> char '\'',
+      identStart = letter,
       identLetter = alphaNum <|> oneOf "_:!#$%&*+./<=>?@\\^|-~'",
       opStart = opLetter sliipStyle,
       opLetter = oneOf "",

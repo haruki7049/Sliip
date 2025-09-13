@@ -25,13 +25,13 @@ spec = do
                             Right v -> v == Just (SExpr [Reference "hoge", SExprV (SExpr [Reference "fuga", Reference "piyo"])])
                         )
 
-    it "parses a symbol" $ do
+    it "don't parses a symbol" $ do
       let input = "( 'hoge )"
           result = parse Sliip.programs "" input
       result
         `shouldSatisfy` ( \r -> case r of
-                            Left _ -> False
-                            Right v -> v == Just (SExpr [Reference "\'hoge"])
+                            Left _ -> True
+                            Right _ -> False
                         )
 
     it "ignores a comment line" $ do
@@ -50,4 +50,22 @@ spec = do
         `shouldSatisfy` ( \r -> case r of
                             Left _ -> False
                             Right v -> v == Just (SExpr [Reference "hoge"])
+                        )
+
+    it "parses a word in sexpr, which contains slash" $ do
+      let input = "( hoge/hoge )"
+          result = parse Sliip.programs "" input
+      result
+        `shouldSatisfy` ( \r -> case r of
+                            Left _ -> False
+                            Right v -> v == Just (SExpr [Reference "hoge/hoge"])
+                        )
+
+    it "parses a word in sexpr, which contains plus" $ do
+      let input = "( hoge+hoge )"
+          result = parse Sliip.programs "" input
+      result
+        `shouldSatisfy` ( \r -> case r of
+                            Left _ -> False
+                            Right v -> v == Just (SExpr [Reference "hoge+hoge"])
                         )
