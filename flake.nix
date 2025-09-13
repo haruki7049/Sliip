@@ -47,9 +47,12 @@
             programs.shfmt.enable = true;
           };
 
-          devShells.default = pkgs.haskell.lib.buildStackProject {
-            name = "sliip";
-            ghc = pkgs.haskellPackages.ghc;
+          devShells.default = pkgs.haskellPackages.developPackage {
+            root = ./.;
+            modifier = drv:
+              pkgs.haskell.lib.addBuildTools drv ([
+                pkgs.haskellPackages.stack
+              ]);
           };
         };
     };
