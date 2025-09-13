@@ -24,3 +24,12 @@ spec = do
                             Left _ -> False
                             Right _ -> True
                         )
+
+    it "parses a symbol" $ do
+      let input = "( 'hoge )"
+          result = parse Sliip.sexpr "" input
+      result
+        `shouldSatisfy` ( \r -> case r of
+                            Left _ -> False
+                            Right _ -> True
+                        )
