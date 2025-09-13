@@ -22,6 +22,7 @@ executables:
       - -with-rtsopts=-N
     dependencies:
       - sliip
+      - optparse-applicative
 
 tests:
   tests:
