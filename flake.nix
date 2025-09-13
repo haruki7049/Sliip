@@ -51,7 +51,12 @@
             root = ./.;
             modifier = drv:
               pkgs.haskell.lib.addBuildTools drv ([
+                # Build tools
                 pkgs.haskellPackages.stack
+
+                # LSP
+                pkgs.haskellPackages.haskell-language-server
+                pkgs.nil
               ]);
           };
         };
