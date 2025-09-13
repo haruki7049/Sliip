@@ -3,9 +3,9 @@ module Sliip where
 import Text.Parsec (Parsec, many, (<|>))
 import Text.Parsec.Char (alphaNum, char, letter, oneOf)
 import Text.Parsec.Language (emptyDef)
-import qualified Text.Parsec.Language as Lang
-import Text.Parsec.Token (LanguageDef, caseSensitive, commentEnd, commentLine, commentStart, identLetter, identStart, nestedComments, opLetter, opStart, reservedNames, reservedOpNames)
-import qualified Text.Parsec.Token as TT
+import qualified Text.Parsec.Language as Lang (haskell)
+import Text.Parsec.Token (LanguageDef, TokenParser, caseSensitive, commentEnd, commentLine, commentStart, identLetter, identStart, makeTokenParser, nestedComments, opLetter, opStart, reservedNames, reservedOpNames)
+import qualified Text.Parsec.Token as TT (identifier, stringLiteral, symbol)
 
 sliipStyle :: LanguageDef st
 sliipStyle =
@@ -35,8 +35,8 @@ data Value
   | SubExpr SExpression
   deriving (Show)
 
-lexer :: TT.TokenParser ()
-lexer = TT.makeTokenParser sliipStyle
+lexer :: TokenParser ()
+lexer = makeTokenParser sliipStyle
 
 symbol :: String -> Parser String
 symbol = TT.symbol Lang.haskell
