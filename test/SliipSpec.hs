@@ -1,6 +1,6 @@
 module SliipSpec (spec) where
 
-import Sliip (sexpr)
+import Sliip (sexpr, SExpression(SExpr), Value(Reference, SubExpr))
 import Test.Hspec (Spec, describe, it, shouldSatisfy)
 import Text.Parsec (parse)
 
@@ -13,7 +13,7 @@ spec = do
       result
         `shouldSatisfy` ( \r -> case r of
                             Left _ -> False
-                            Right _ -> True
+                            Right v -> v == (SExpr [Reference "hoge"])
                         )
 
     it "parses a nested SExpression" $ do
@@ -22,7 +22,7 @@ spec = do
       result
         `shouldSatisfy` ( \r -> case r of
                             Left _ -> False
-                            Right _ -> True
+                            Right v -> v == (SExpr [Reference "hoge", SubExpr (SExpr [Reference "fuga", Reference "piyo"])])
                         )
 
     it "parses a symbol" $ do
@@ -31,5 +31,5 @@ spec = do
       result
         `shouldSatisfy` ( \r -> case r of
                             Left _ -> False
-                            Right _ -> True
+                            Right v -> v == (SExpr [Reference "\'hoge"])
                         )

@@ -27,13 +27,13 @@ type Parser a = Parsec String () a
 
 newtype SExpression
   = SExpr [Value]
-  deriving (Show)
+  deriving (Show, Eq)
 
 data Value
   = StringLiteral String
   | Reference String
   | SubExpr SExpression
-  deriving (Show)
+  deriving (Show, Eq)
 
 lexer :: TokenParser ()
 lexer = makeTokenParser sliipStyle

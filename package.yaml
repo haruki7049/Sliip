@@ -35,4 +35,3 @@ tests:
       - sliip
       - hspec
       - hspec-discover
-      - QuickCheck
