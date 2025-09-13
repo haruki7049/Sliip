@@ -5,7 +5,7 @@ import Text.Parsec (parse)
 
 main :: IO ()
 main = do
-  putStrLn "Enter your number..."
+  putStrLn "Enter your SExpression..."
 
   s <- getLine
   case parse Sliip.sexpr "stdin" s of
