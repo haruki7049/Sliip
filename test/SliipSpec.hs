@@ -1,6 +1,6 @@
 module SliipSpec (spec) where
 
-import Sliip (SExpression (SExpr), Value (Reference, SExprV), programs)
+import Sliip (SExpression (SExpr), Value (Reference, SExprV, StringLiteral), programs)
 import Test.Hspec (Spec, describe, it, shouldSatisfy)
 import Text.Parsec (parse)
 
@@ -68,4 +68,22 @@ spec = do
         `shouldSatisfy` ( \r -> case r of
                             Left _ -> False
                             Right v -> v == Just (SExpr [Reference "hoge+hoge"])
+                        )
+
+    it "parses a stringLiteral in sexpr" $ do
+      let input = "( \"hoge\" )"
+          result = parse Sliip.programs "" input
+      result
+        `shouldSatisfy` ( \r -> case r of
+                            Left _ -> False
+                            Right v -> v == Just (SExpr [StringLiteral "hoge"])
+                        )
+
+    it "parses a stringLiteral in sexpr, which contains escape sequence" $ do
+      let input = "( \"hoge\\thoge\" )"
+          result = parse Sliip.programs "" input
+      result
+        `shouldSatisfy` ( \r -> case r of
+                            Left _ -> False
+                            Right v -> v == Just (SExpr [StringLiteral "hoge\thoge"])
                         )
