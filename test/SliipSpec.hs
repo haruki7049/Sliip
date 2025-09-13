@@ -1,6 +1,6 @@
 module SliipSpec (spec) where
 
-import Sliip (sexpr, SExpression(SExpr), Value(Reference, SubExpr))
+import Sliip (SExpression (SExpr), Value (Reference, SubExpr), sexpr)
 import Test.Hspec (Spec, describe, it, shouldSatisfy)
 import Text.Parsec (parse)
 
