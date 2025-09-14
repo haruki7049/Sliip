@@ -1,9 +1,8 @@
 module Sliip.Parser
-  (
-    programs
-  , SExpression(..)
-  , Value(..)
-  , Programs
+  ( programs,
+    SExpression (..),
+    Value (..),
+    Programs,
   )
 where
 
