@@ -32,6 +32,7 @@
 
             # Haskell
             programs.ormolu.enable = true;
+            programs.hlint.enable = true;
 
             # Yaml
             programs.yamlfmt.enable = true;
@@ -58,6 +59,9 @@
               pkgs.haskell.lib.addBuildTools drv ([
                 # Build tools
                 pkgs.haskellPackages.stack
+
+                # Linter
+                pkgs.haskellPackages.hlint
 
                 # LSP
                 pkgs.haskellPackages.haskell-language-server

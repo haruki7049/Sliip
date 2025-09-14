@@ -1,5 +1,8 @@
+{-# LANGUAGE LambdaCase #-}
+
 module SliipSpec (spec) where
 
+import Data.Maybe (isNothing)
 import Sliip (SExpression (SExpr), Value (Reference, SExprV, StringLiteral), programs)
 import Test.Hspec (Spec, describe, it, shouldSatisfy)
 import Text.Parsec (parse)
@@ -11,7 +14,7 @@ spec = do
       let input = "( hoge )"
           result = parse Sliip.programs "" input
       result
-        `shouldSatisfy` ( \r -> case r of
+        `shouldSatisfy` ( \case
                             Left _ -> False
                             Right v -> v == Just (SExpr [Reference "hoge"])
                         )
@@ -20,7 +23,7 @@ spec = do
       let input = "( hoge ( fuga piyo ) )"
           result = parse Sliip.programs "" input
       result
-        `shouldSatisfy` ( \r -> case r of
+        `shouldSatisfy` ( \case
                             Left _ -> False
                             Right v -> v == Just (SExpr [Reference "hoge", SExprV (SExpr [Reference "fuga", Reference "piyo"])])
                         )
@@ -29,7 +32,7 @@ spec = do
       let input = "( 'hoge )"
           result = parse Sliip.programs "" input
       result
-        `shouldSatisfy` ( \r -> case r of
+        `shouldSatisfy` ( \case
                             Left _ -> True
                             Right _ -> False
                         )
@@ -38,16 +41,16 @@ spec = do
       let input = "; hogehoge"
           result = parse Sliip.programs "" input
       result
-        `shouldSatisfy` ( \r -> case r of
+        `shouldSatisfy` ( \case
                             Left _ -> False
-                            Right v -> v == Nothing
+                            Right v -> isNothing v
                         )
 
     it "parses a sexpr with some comment line" $ do
       let input = "; hogehoge\n( hoge )\n; fuga"
           result = parse Sliip.programs "" input
       result
-        `shouldSatisfy` ( \r -> case r of
+        `shouldSatisfy` ( \case
                             Left _ -> False
                             Right v -> v == Just (SExpr [Reference "hoge"])
                         )
@@ -56,7 +59,7 @@ spec = do
       let input = "( hoge/hoge )"
           result = parse Sliip.programs "" input
       result
-        `shouldSatisfy` ( \r -> case r of
+        `shouldSatisfy` ( \case
                             Left _ -> False
                             Right v -> v == Just (SExpr [Reference "hoge/hoge"])
                         )
@@ -65,7 +68,7 @@ spec = do
       let input = "( hoge+hoge )"
           result = parse Sliip.programs "" input
       result
-        `shouldSatisfy` ( \r -> case r of
+        `shouldSatisfy` ( \case
                             Left _ -> False
                             Right v -> v == Just (SExpr [Reference "hoge+hoge"])
                         )
@@ -74,7 +77,7 @@ spec = do
       let input = "( \"hoge\" )"
           result = parse Sliip.programs "" input
       result
-        `shouldSatisfy` ( \r -> case r of
+        `shouldSatisfy` ( \case
                             Left _ -> False
                             Right v -> v == Just (SExpr [StringLiteral "hoge"])
                         )
@@ -83,7 +86,7 @@ spec = do
       let input = "( \"hoge\\thoge\" )"
           result = parse Sliip.programs "" input
       result
-        `shouldSatisfy` ( \r -> case r of
+        `shouldSatisfy` ( \case
                             Left _ -> False
                             Right v -> v == Just (SExpr [StringLiteral "hoge\thoge"])
                         )
