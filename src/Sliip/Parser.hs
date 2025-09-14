@@ -68,12 +68,12 @@ value =
 stringLiteral :: Parser String
 stringLiteral = TT.stringLiteral lexer
 
-type Programs = Maybe SExpression
+type Programs = [SExpression]
 
 programs :: Parser Programs
 programs = do
   whitespace
-  expr <- optionMaybe sexpr
+  expr <- many sexpr
   whitespace
   eof
   return expr

@@ -2,7 +2,7 @@
 
 module SliipParserSpec (spec) where
 
-import Data.Maybe (isNothing)
+import Data.List (null)
 import Sliip.Parser (SExpression (SExpr), Value (Reference, SExprV, StringLiteral), programs)
 import Test.Hspec (Spec, describe, it, shouldSatisfy)
 import Text.Parsec (parse)
@@ -16,7 +16,7 @@ spec = do
       result
         `shouldSatisfy` ( \case
                             Left _ -> False
-                            Right v -> v == Just (SExpr [Reference "hoge"])
+                            Right v -> v == [SExpr [Reference "hoge"]]
                         )
 
     it "parses a nested SExpression" $ do
@@ -25,7 +25,7 @@ spec = do
       result
         `shouldSatisfy` ( \case
                             Left _ -> False
-                            Right v -> v == Just (SExpr [Reference "hoge", SExprV (SExpr [Reference "fuga", Reference "piyo"])])
+                            Right v -> v == [SExpr [Reference "hoge", SExprV (SExpr [Reference "fuga", Reference "piyo"])]]
                         )
 
     it "don't parses a symbol" $ do
@@ -43,7 +43,7 @@ spec = do
       result
         `shouldSatisfy` ( \case
                             Left _ -> False
-                            Right v -> isNothing v
+                            Right v -> null v
                         )
 
     it "parses a sexpr with some comment line" $ do
@@ -52,7 +52,7 @@ spec = do
       result
         `shouldSatisfy` ( \case
                             Left _ -> False
-                            Right v -> v == Just (SExpr [Reference "hoge"])
+                            Right v -> v == [SExpr [Reference "hoge"]]
                         )
 
     it "parses a word in sexpr, which contains slash" $ do
@@ -61,7 +61,7 @@ spec = do
       result
         `shouldSatisfy` ( \case
                             Left _ -> False
-                            Right v -> v == Just (SExpr [Reference "hoge/hoge"])
+                            Right v -> v == [SExpr [Reference "hoge/hoge"]]
                         )
 
     it "parses a word in sexpr, which contains plus" $ do
@@ -70,7 +70,7 @@ spec = do
       result
         `shouldSatisfy` ( \case
                             Left _ -> False
-                            Right v -> v == Just (SExpr [Reference "hoge+hoge"])
+                            Right v -> v == [SExpr [Reference "hoge+hoge"]]
                         )
 
     it "parses a stringLiteral in sexpr" $ do
@@ -79,7 +79,7 @@ spec = do
       result
         `shouldSatisfy` ( \case
                             Left _ -> False
-                            Right v -> v == Just (SExpr [StringLiteral "hoge"])
+                            Right v -> v == [SExpr [StringLiteral "hoge"]]
                         )
 
     it "parses a stringLiteral in sexpr, which contains escape sequence" $ do
@@ -88,5 +88,18 @@ spec = do
       result
         `shouldSatisfy` ( \case
                             Left _ -> False
-                            Right v -> v == Just (SExpr [StringLiteral "hoge\thoge"])
+                            Right v -> v == [SExpr [StringLiteral "hoge\thoge"]]
+                        )
+
+    it "parses multipul SExpressions" $ do
+      let input = "( hoge )\n( fuga )"
+          result = parse programs "" input
+      result
+        `shouldSatisfy` ( \case
+                            Left _ -> False
+                            Right v ->
+                              v
+                                == [ SExpr [Reference "hoge"],
+                                     SExpr [Reference "fuga"]
+                                   ]
                         )
