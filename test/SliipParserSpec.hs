@@ -3,7 +3,7 @@
 module SliipParserSpec (spec) where
 
 import Data.List (null)
-import Sliip.Parser (SExpression (SExpr), Value (Reference, SExprV, StringLiteral), programs)
+import Sliip.Parser (SExpression (SExpr), Value (Builtin, Reference, SExprV, StringLiteral), programs)
 import Test.Hspec (Spec, describe, it, shouldSatisfy)
 import Text.Parsec (parse)
 
@@ -102,4 +102,15 @@ spec = do
                                 == [ SExpr [Reference "hoge"],
                                      SExpr [Reference "fuga"]
                                    ]
+                        )
+
+    it "parses some builtin words" $ do
+      let input = "( define main ( lambda () ()) )"
+          result = parse programs "" input
+      result
+        `shouldSatisfy` ( \case
+                            Left _ -> False
+                            Right v ->
+                              v
+                                == [SExpr [Builtin "define", Builtin "main", SExprV (SExpr [Builtin "lambda", SExprV (SExpr []), SExprV (SExpr [])])]]
                         )

@@ -6,11 +6,11 @@ module Sliip.Parser
   )
 where
 
-import Text.Parsec (Parsec, eof, many, optionMaybe, (<|>))
+import Text.Parsec (Parsec, choice, eof, many, optionMaybe, (<|>))
 import Text.Parsec.Char (alphaNum, letter, oneOf)
 import Text.Parsec.Language (emptyDef)
 import Text.Parsec.Token (LanguageDef, TokenParser, caseSensitive, commentEnd, commentLine, commentStart, identLetter, identStart, makeTokenParser, nestedComments, opLetter, opStart, reservedNames, reservedOpNames)
-import qualified Text.Parsec.Token as TT (identifier, stringLiteral, symbol, whiteSpace)
+import qualified Text.Parsec.Token as TT (identifier, reserved, stringLiteral, symbol, whiteSpace)
 
 sliipStyle :: LanguageDef st
 sliipStyle =
@@ -24,7 +24,7 @@ sliipStyle =
       opStart = opLetter sliipStyle,
       opLetter = oneOf "",
       reservedOpNames = [],
-      reservedNames = [],
+      reservedNames = ["define", "lambda", "main"],
       caseSensitive = True
     }
 
@@ -36,6 +36,7 @@ newtype SExpression
 
 data Value
   = StringLiteral String
+  | Builtin String
   | Reference String
   | SExprV SExpression
   deriving (Show, Eq)
@@ -59,9 +60,14 @@ sexpr = do
 identifier :: Parser String
 identifier = TT.identifier lexer
 
+builtin :: Parser String
+builtin =
+  choice (map (\kw -> TT.reserved lexer kw >> return kw) $ reservedNames sliipStyle)
+
 value :: Parser Value
 value =
   (SExprV <$> sexpr)
+    <|> (Builtin <$> builtin)
     <|> (StringLiteral <$> stringLiteral)
     <|> (Reference <$> identifier)
 
