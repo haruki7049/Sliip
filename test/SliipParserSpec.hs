@@ -1,9 +1,9 @@
 {-# LANGUAGE LambdaCase #-}
 
-module SliipSpec (spec) where
+module SliipParserSpec (spec) where
 
 import Data.Maybe (isNothing)
-import Sliip (SExpression (SExpr), Value (Reference, SExprV, StringLiteral), programs)
+import Sliip.Parser (SExpression (SExpr), Value (Reference, SExprV, StringLiteral), programs)
 import Test.Hspec (Spec, describe, it, shouldSatisfy)
 import Text.Parsec (parse)
 
@@ -12,7 +12,7 @@ spec = do
   describe "parse" $ do
     it "parses a simple SExpression" $ do
       let input = "( hoge )"
-          result = parse Sliip.programs "" input
+          result = parse programs "" input
       result
         `shouldSatisfy` ( \case
                             Left _ -> False
@@ -21,7 +21,7 @@ spec = do
 
     it "parses a nested SExpression" $ do
       let input = "( hoge ( fuga piyo ) )"
-          result = parse Sliip.programs "" input
+          result = parse programs "" input
       result
         `shouldSatisfy` ( \case
                             Left _ -> False
@@ -30,7 +30,7 @@ spec = do
 
     it "don't parses a symbol" $ do
       let input = "( 'hoge )"
-          result = parse Sliip.programs "" input
+          result = parse programs "" input
       result
         `shouldSatisfy` ( \case
                             Left _ -> True
@@ -39,7 +39,7 @@ spec = do
 
     it "ignores a comment line" $ do
       let input = "; hogehoge"
-          result = parse Sliip.programs "" input
+          result = parse programs "" input
       result
         `shouldSatisfy` ( \case
                             Left _ -> False
@@ -48,7 +48,7 @@ spec = do
 
     it "parses a sexpr with some comment line" $ do
       let input = "; hogehoge\n( hoge )\n; fuga"
-          result = parse Sliip.programs "" input
+          result = parse programs "" input
       result
         `shouldSatisfy` ( \case
                             Left _ -> False
@@ -57,7 +57,7 @@ spec = do
 
     it "parses a word in sexpr, which contains slash" $ do
       let input = "( hoge/hoge )"
-          result = parse Sliip.programs "" input
+          result = parse programs "" input
       result
         `shouldSatisfy` ( \case
                             Left _ -> False
@@ -66,7 +66,7 @@ spec = do
 
     it "parses a word in sexpr, which contains plus" $ do
       let input = "( hoge+hoge )"
-          result = parse Sliip.programs "" input
+          result = parse programs "" input
       result
         `shouldSatisfy` ( \case
                             Left _ -> False
@@ -75,7 +75,7 @@ spec = do
 
     it "parses a stringLiteral in sexpr" $ do
       let input = "( \"hoge\" )"
-          result = parse Sliip.programs "" input
+          result = parse programs "" input
       result
         `shouldSatisfy` ( \case
                             Left _ -> False
@@ -84,7 +84,7 @@ spec = do
 
     it "parses a stringLiteral in sexpr, which contains escape sequence" $ do
       let input = "( \"hoge\\thoge\" )"
-          result = parse Sliip.programs "" input
+          result = parse programs "" input
       result
         `shouldSatisfy` ( \case
                             Left _ -> False

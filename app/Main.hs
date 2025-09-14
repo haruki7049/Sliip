@@ -3,7 +3,7 @@
 module Main where
 
 import Options.Applicative (Parser, ParserInfo, execParser, help, helper, info, long, metavar, progDesc, short, strOption, switch, (<**>))
-import qualified Sliip (programs)
+import qualified Sliip.Parser as SParser (programs)
 import Text.Parsec (parse)
 
 main :: IO ()
@@ -11,7 +11,7 @@ main = execParser argumentParserInfo >>= run
 
 run :: CLIArgument -> IO ()
 run CLIArgument {..} = do
-  case parse Sliip.programs "" script of
+  case parse SParser.programs "" script of
     Left err -> print err
     Right x -> print x
 
