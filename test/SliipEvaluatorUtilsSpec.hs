@@ -1,6 +1,6 @@
 module SliipEvaluatorUtilsSpec (spec) where
 
-import Sliip.Evaluator.Utils (isDefine, isMain, hasLambda)
+import Sliip.Evaluator.Utils (hasLambda, isDefine, isMain)
 import Sliip.Parser (Programs, SExpression (SExpr), Value (Builtin, Reference, SExprV, StringLiteral), parse)
 import Test.Hspec (Spec, describe, it, shouldBe)
 import Text.Parsec.Error (ParseError)
