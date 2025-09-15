@@ -1,6 +1,6 @@
-module Sliip.Evaluator.Utils (isDefine, isMain) where
+module Sliip.Evaluator.Utils (isDefine, isMain, hasLambda) where
 
-import Sliip.Parser (SExpression (SExpr), Value (Builtin))
+import Sliip.Parser (SExpression (SExpr), Value (Builtin, SExprV))
 
 isDefine :: SExpression -> Bool
 isDefine (SExpr (Builtin "define" : _)) = True
@@ -10,4 +10,6 @@ isMain :: SExpression -> Bool
 isMain (SExpr (_ : Builtin "main" : _)) = True
 isMain _ = False
 
--- hasLambda :: SExpression -> Bool
+hasLambda :: SExpression -> Bool
+hasLambda (SExpr (_ : _ : SExprV (SExpr (Builtin "lambda" : _)) : _)) = True
+hasLambda _ = False

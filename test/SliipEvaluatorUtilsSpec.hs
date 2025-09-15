@@ -1,6 +1,6 @@
 module SliipEvaluatorUtilsSpec (spec) where
 
-import Sliip.Evaluator.Utils (isDefine, isMain)
+import Sliip.Evaluator.Utils (isDefine, isMain, hasLambda)
 import Sliip.Parser (Programs, SExpression (SExpr), Value (Builtin, Reference, SExprV, StringLiteral), parse)
 import Test.Hspec (Spec, describe, it, shouldBe)
 import Text.Parsec.Error (ParseError)
@@ -40,5 +40,23 @@ spec = do
 
           result :: Bool
           result = isMain notDefineAST
+
+      result `shouldBe` False
+
+  describe "hasLambda" $ do
+    it "judges whether the value is \"lambda\" value or not" $ do
+      let lambdaAST :: SExpression
+          lambdaAST = SExpr [Builtin "define", Builtin "main", SExprV (SExpr [Builtin "lambda", SExprV (SExpr []), SExprV (SExpr [Reference "println", StringLiteral "hello"])])]
+
+          result :: Bool
+          result = hasLambda lambdaAST
+
+      result `shouldBe` True
+
+      let notLambdaAST :: SExpression
+          notLambdaAST = SExpr [Builtin "define", Reference "foobar", StringLiteral "fuga"]
+
+          result :: Bool
+          result = hasLambda notLambdaAST
 
       result `shouldBe` False
