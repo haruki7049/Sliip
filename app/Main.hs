@@ -4,7 +4,6 @@ module Main where
 
 import Options.Applicative (Parser, ParserInfo, execParser, help, helper, info, long, metavar, progDesc, short, strOption, switch, (<**>))
 import qualified Sliip.Evaluator as SEvaluator (eval)
-import qualified Sliip.Parser as SParser (programs)
 import Text.Parsec (parse)
 
 main :: IO ()

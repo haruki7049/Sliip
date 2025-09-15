@@ -3,14 +3,13 @@ module Sliip.Evaluator
   )
 where
 
-import Sliip.Parser (Programs, programs)
-import Text.Parsec (parse)
+import Sliip.Parser (Programs, parse)
 import Text.Parsec.Error (ParseError)
 
 eval :: String -> IO ()
 eval script = do
   let parsed_result :: Either ParseError Programs
-      parsed_result = parse programs "" script
+      parsed_result = parse script
 
   case parsed_result of
     Left err -> print err

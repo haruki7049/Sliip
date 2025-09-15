@@ -3,10 +3,12 @@ module Sliip.Parser
     SExpression (..),
     Value (..),
     Programs,
+    parse,
   )
 where
 
-import Text.Parsec (Parsec, choice, eof, many, (<|>))
+import Text.Parsec (ParseError, Parsec, choice, eof, many, (<|>))
+import qualified Text.Parsec (parse)
 import Text.Parsec.Char (alphaNum, letter, oneOf)
 import Text.Parsec.Language (emptyDef)
 import Text.Parsec.Token (LanguageDef, TokenParser, caseSensitive, commentEnd, commentLine, commentStart, identLetter, identStart, makeTokenParser, nestedComments, opLetter, opStart, reservedNames, reservedOpNames)
@@ -28,7 +30,7 @@ sliipStyle =
       caseSensitive = True
     }
 
-type Parser a = Parsec String () a
+type Parser a = Text.Parsec.Parsec String () a
 
 newtype SExpression
   = SExpr [Value]
@@ -83,3 +85,6 @@ programs = do
   whitespace
   eof
   return expr
+
+parse :: String -> Either Text.Parsec.ParseError Programs
+parse = Text.Parsec.parse programs ""
