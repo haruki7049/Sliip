@@ -6,7 +6,7 @@ module Sliip.Parser
   )
 where
 
-import Text.Parsec (Parsec, choice, eof, many, optionMaybe, (<|>))
+import Text.Parsec (Parsec, choice, eof, many, (<|>))
 import Text.Parsec.Char (alphaNum, letter, oneOf)
 import Text.Parsec.Language (emptyDef)
 import Text.Parsec.Token (LanguageDef, TokenParser, caseSensitive, commentEnd, commentLine, commentStart, identLetter, identStart, makeTokenParser, nestedComments, opLetter, opStart, reservedNames, reservedOpNames)
