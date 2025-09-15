@@ -10,9 +10,17 @@ spec = do
   describe "isDefine" $ do
     it "judges whether the sexpr uses \"define\" function or not" $ do
       let defineAST :: SExpression
-          defineAST = SExpr [Builtin "define", Builtin "main", StringLiteral "\"hoge\""]
+          defineAST = SExpr [Builtin "define", Builtin "main", StringLiteral "hoge"]
 
           result :: Bool
           result = isDefine defineAST
 
       result `shouldBe` True
+
+      let notDefineAST :: SExpression
+          notDefineAST = SExpr [Reference "foobar", Builtin "main", StringLiteral "fuga"]
+
+          result :: Bool
+          result = isDefine notDefineAST
+
+      result `shouldBe` False
