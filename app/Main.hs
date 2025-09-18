@@ -3,7 +3,7 @@
 module Main where
 
 import Options.Applicative (Parser, ParserInfo, execParser, help, helper, info, long, metavar, progDesc, short, strOption, switch, (<**>))
-import qualified Sliip.Evaluator as SEvaluator (eval)
+import Sliip.Evaluator (eval)
 import Text.Parsec (parse)
 
 main :: IO ()
@@ -11,7 +11,7 @@ main = execParser argumentParserInfo >>= run
 
 run :: CLIArgument -> IO ()
 run CLIArgument {..} = do
-  SEvaluator.eval script
+  eval script
 
 newtype CLIArgument = CLIArgument
   { script :: String
