@@ -1,7 +1,7 @@
 module SliipEvaluatorSpec (spec) where
 
 import Sliip.Evaluator (EvaluationError, Executable, Statement (WriteLine), evalSExpr)
-import Sliip.Parser (SExpression (SExpr), Value (Builtin, SExprV, StringLiteral))
+import Sliip.Parser (SExpression (SExpr), Atom (Builtin, SExprV, StringLiteral))
 import Test.Hspec (Spec, describe, it, shouldBe)
 
 spec :: Spec

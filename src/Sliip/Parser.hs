@@ -1,7 +1,7 @@
 module Sliip.Parser
   ( programs,
     SExpression (..),
-    Value (..),
+    Atom (..),
     Programs,
     parse,
   )
@@ -33,10 +33,10 @@ sliipStyle =
 type Parser a = Text.Parsec.Parsec String () a
 
 newtype SExpression
-  = SExpr [Value]
+  = SExpr [Atom]
   deriving (Show, Eq)
 
-data Value
+data Atom
   = StringLiteral String
   | Builtin String
   | Reference String
@@ -55,9 +55,9 @@ whitespace = TT.whiteSpace lexer
 sexpr :: Parser SExpression
 sexpr = do
   _ <- symbol "("
-  xs <- many value
+  x <- many atom
   _ <- symbol ")"
-  return (SExpr xs)
+  return (SExpr x)
 
 identifier :: Parser String
 identifier = TT.identifier lexer
@@ -66,8 +66,8 @@ builtin :: Parser String
 builtin =
   choice (map (\kw -> TT.reserved lexer kw >> return kw) $ reservedNames sliipStyle)
 
-value :: Parser Value
-value =
+atom :: Parser Atom
+atom =
   (SExprV <$> sexpr)
     <|> (Builtin <$> builtin)
     <|> (StringLiteral <$> stringLiteral)

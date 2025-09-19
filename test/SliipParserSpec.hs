@@ -3,7 +3,7 @@
 module SliipParserSpec (spec) where
 
 import Data.List (null)
-import Sliip.Parser (SExpression (SExpr), Value (Builtin, Reference, SExprV, StringLiteral), parse, programs)
+import Sliip.Parser (SExpression (SExpr), Atom (Builtin, Reference, SExprV, StringLiteral), parse, programs)
 import Test.Hspec (Spec, describe, it, shouldSatisfy)
 
 spec :: Spec

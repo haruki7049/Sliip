@@ -10,7 +10,7 @@ where
 import Control.Monad (forM_)
 import Data.List (find)
 import Sliip.Evaluator.Utils (isDefine, isMain)
-import Sliip.Parser (Programs, SExpression (SExpr), Value (Builtin, SExprV, StringLiteral), parse)
+import Sliip.Parser (Programs, SExpression (SExpr), Atom (Builtin, SExprV, StringLiteral), parse)
 import Text.Parsec.Error (ParseError)
 
 type Executable = [Statement]
