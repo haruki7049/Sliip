@@ -1,11 +1,22 @@
 module SliipEvaluatorSpec (spec) where
 
-import Sliip.Evaluator (Environment, EvaluationError (NoMainFound), Executable, Statement (WriteLine), buildEnv, evalSExpr, getMain)
+import Sliip.Evaluator (Environment, EvaluationError (NoMainFound), Executable, Statement (WriteLine), buildEnv, evalSExpr, getMain, eval)
 import Sliip.Parser (Atom (Builtin, Reference, SExprV, StringLiteral), SExpression (SExpr))
 import Test.Hspec (Spec, describe, it, shouldBe)
+import System.IO.Silently (capture_)
 
 spec :: Spec
 spec = do
+  describe "eval" $ do
+    it "prints result of main's write-line" $ do
+      let program = unlines
+            [ "(define main"
+            , "  (lambda ()"
+            , "    (write-line \"hello\")))"
+            ]
+      out <- capture_ (eval program)
+      out `shouldBe` "hello\n"
+
   describe "evalSExpr" $ do
     it "evaluates SExpression without any statement in lambda, to Executable" $ do
       let programs :: [SExpression]
