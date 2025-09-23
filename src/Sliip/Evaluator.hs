@@ -8,11 +8,20 @@ import Sliip.Parser (Atom (Builtin, Reference, SExprV, StringLiteral), Programs,
 import Text.Parsec.Error (ParseError)
 import Prelude hiding (lookup)
 
+-- | Executable which contains list of 'Statement'
+--
+-- Used in 'eval' function
 type Executable = [Statement]
 
-newtype Statement = WriteLine String
+-- | Statement is a Execution units in Sliip.
+newtype Statement =
+  -- | Display the String to stdout.
+  WriteLine String
   deriving (Show, Eq)
 
+-- | EvaluationError is the errors used in Sliip interpreter.
+--
+-- These are used as runtime errors
 data EvaluationError
   = NoMainFound
   | InvalidForm SExpression
@@ -21,6 +30,9 @@ data EvaluationError
   | UnknownReference String
   deriving (Show, Eq)
 
+-- | Value is data defined the types for Sliip language.
+--
+-- These are used as primitive types
 data Value
   = VString String
   | VLambda [String] SExpression Environment
@@ -31,9 +43,15 @@ instance Show Value where
   show (VString s) = "VString " ++ show s
   show (VLambda args sexpr env) = "VLambda " ++ show args ++ show sexpr ++ show env
   show (VBuiltin name _) = "VBuiltin " ++ show name
+  show (VThunk atom _) = "VThunk " ++ show atom
 
+-- | Contains bind name and Value sets.
 type Environment = Map String Value
 
+-- | Evaluates Sliip scripts.
+--
+-- >>> eval "(define main (lambda () (write-line \"hoge\")))"
+-- hoge
 eval :: String -> IO ()
 eval script = do
   let parsed_result :: Either ParseError Programs
