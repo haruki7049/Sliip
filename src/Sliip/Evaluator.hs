@@ -112,7 +112,6 @@ buildLambda :: SExpression -> SExpression -> Environment -> Either EvaluationErr
 buildLambda (SExpr args) body env =
   let argNames = [name | Reference name <- args]
    in Right (VLambda argNames body env)
-buildLambda _ _ _ = Left (InvalidForm (SExpr []))
 
 evalValue :: Environment -> Atom -> Either EvaluationError Value
 evalValue _ (StringLiteral s) = Right (VString s)
@@ -122,7 +121,7 @@ evalValue env (SExprV (SExpr [Builtin "lambda", SExprV args, SExprV body])) =
 evalValue _ atom = Left (InvalidAtom atom)
 
 evalLambda :: Environment -> [String] -> SExpression -> Either EvaluationError Executable
-evalLambda env _ (SExpr [Builtin "write-line", StringLiteral stringLiteral]) = Right [WriteLine stringLiteral]
+evalLambda _ _ (SExpr [Builtin "write-line", StringLiteral stringLiteral]) = Right [WriteLine stringLiteral]
 evalLambda env _ (SExpr [Builtin "write-line", Reference ref]) =
   case lookupVar ref env of
     Right (VString s) -> Right [WriteLine s]
