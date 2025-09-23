@@ -1,14 +1,4 @@
-module Sliip.Evaluator
-  ( eval,
-    Executable,
-    Statement (..),
-    EvaluationError (..),
-    Environment,
-    getMain,
-    evalSExpr,
-    buildEnv,
-  )
-where
+module Sliip.Evaluator ( eval ) where
 
 import Control.Monad (forM_)
 import Data.List (find)
