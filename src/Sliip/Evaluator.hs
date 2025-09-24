@@ -14,9 +14,9 @@ import Prelude hiding (lookup)
 type Executable = [Statement]
 
 -- | Statement is a Execution units in Sliip.
-newtype Statement =
-  -- | Display the String to stdout.
-  WriteLine String
+newtype Statement
+  = -- | Display the String to stdout.
+    WriteLine String
   deriving (Show, Eq)
 
 -- | EvaluationError is the errors used in Sliip interpreter.
