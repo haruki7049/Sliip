@@ -113,3 +113,14 @@ spec = do
                               v
                                 == [SExpr [Builtin "define", Builtin "main", SExprV (SExpr [Builtin "lambda", SExprV (SExpr []), SExprV (SExpr [])])]]
                         )
+
+    it "parses progn as builtin word" $ do
+      let input = "( progn )"
+          result = parse input
+      result
+        `shouldSatisfy` ( \case
+                            Left _ -> False
+                            Right v ->
+                              v
+                              == [SExpr [Builtin "progn"]]
+                        )

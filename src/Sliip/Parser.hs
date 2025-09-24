@@ -26,7 +26,7 @@ sliipStyle =
       opStart = opLetter sliipStyle,
       opLetter = oneOf "",
       reservedOpNames = [],
-      reservedNames = ["define", "lambda", "main", "write-line"],
+      reservedNames = ["define", "lambda", "main", "write-line", "progn"],
       caseSensitive = True
     }
 
