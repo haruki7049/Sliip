@@ -41,3 +41,8 @@ spec = do
               ]
       out <- capture_ (eval program)
       out `shouldBe` "hello\n"
+
+    it "can defines lambda and string in script" $ do
+      program <- readFile "test/data/displayHoge.lisp"
+      out <- capture_ (eval program)
+      out `shouldBe` "hoge\n"
