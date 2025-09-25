@@ -61,6 +61,7 @@ eval script = do
     Left err -> print err
     Right x -> evalPrograms x
 
+-- | Evaluates Programs, the parsed results.
 evalPrograms :: Programs -> IO ()
 evalPrograms p = do
   let mainSExpr :: Maybe SExpression
@@ -78,6 +79,7 @@ evalPrograms p = do
     Left err -> print err
     Right exe -> runExecutable exe
 
+-- | Registers all defines' values to Environment, and return the Environment
 buildEnv :: Programs -> Environment
 buildEnv = foldl insertDef empty
   where
@@ -86,6 +88,7 @@ buildEnv = foldl insertDef empty
       insert name (VThunk expr env) env
     insertDef env _ = env
 
+-- | lookupVar searches for an Value from String, by Environment
 lookupVar :: String -> Environment -> Either EvaluationError Value
 lookupVar name env =
   case lookup name env of
