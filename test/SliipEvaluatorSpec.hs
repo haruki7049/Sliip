@@ -53,3 +53,23 @@ spec = do
               ]
       out <- capture_ (eval program)
       out `shouldBe` "foo\nbar\n"
+
+    it "fails running by progn with one sexpr" $ do
+      let program =
+            unlines
+              [ "(define main",
+                "  (lambda ()",
+                "    (progn (write-line \"bar\"))))"
+              ]
+      out <- capture_ (eval program)
+      out `shouldBe` "InvalidForm (SExpr [Builtin \"progn\",SExprV (SExpr [Builtin \"write-line\",StringLiteral \"bar\"])])\n"
+
+    it "fails running by progn without any sexpr" $ do
+      let program =
+            unlines
+              [ "(define main",
+                "  (lambda ()",
+                "    (progn)))"
+              ]
+      out <- capture_ (eval program)
+      out `shouldBe` "InvalidForm (SExpr [Builtin \"progn\"])\n"
