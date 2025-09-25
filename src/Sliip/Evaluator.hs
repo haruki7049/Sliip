@@ -73,7 +73,7 @@ evalPrograms p = do
       executable :: Either EvaluationError Executable
       executable = case mainSExpr of
         Nothing -> Left NoMainFound
-        Just sexpr -> evalSExpr env sexpr
+        Just sexpr -> evalMain env sexpr
 
   case executable of
     Left err -> print err
@@ -98,8 +98,11 @@ lookupVar name env =
     Just v -> Right v
     Nothing -> Left (UnknownReference name)
 
+evalMain :: Environment -> SExpression -> Either EvaluationError Executable
+evalMain env (SExpr [Builtin "define", Builtin "main", SExprV sexpr]) = evalSExpr env sexpr
+evalMain _ sexpr = Left (InvalidForm sexpr)
+
 evalSExpr :: Environment -> SExpression -> Either EvaluationError Executable
-evalSExpr env (SExpr [Builtin "define", Builtin "main", SExprV sexpr]) = evalSExpr env sexpr
 evalSExpr env (SExpr [Builtin "lambda", SExprV args, SExprV body]) =
   case buildLambda args body env of
     Right (VLambda a b e) -> evalLambda e a b

@@ -122,5 +122,5 @@ spec = do
                             Left _ -> False
                             Right v ->
                               v
-                              == [SExpr [Builtin "progn"]]
+                                == [SExpr [Builtin "progn"]]
                         )
