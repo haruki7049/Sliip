@@ -41,3 +41,15 @@ spec = do
               ]
       out <- capture_ (eval program)
       out `shouldBe` "hello\n"
+
+    it "prints some texts by progn and write-line" $ do
+      let program =
+            unlines
+              [ "(define main",
+                "  (lambda ()",
+                "    (progn (",
+                "       (write-line \"foo\")",
+                "       (write-line \"bar\")))))"
+              ]
+      out <- capture_ (eval program)
+      out `shouldBe` "foo\nbar\n"
