@@ -226,7 +226,6 @@ parseIf = do
   reserved "if"
   c <- parseExpr
   t <- parseExpr
-  e <- parseExpr
   EIf c t <$> parseExpr
 
 parseBegin :: Parser Expr
