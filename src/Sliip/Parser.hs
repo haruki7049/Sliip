@@ -131,12 +131,12 @@ parseType = P.try parseArrow P.<|> parseTypeAtom
 
 parseTypeAtom :: Parser TypeExpr
 parseTypeAtom =
-  ( parens $ do
+  parens $
+    do
       name <- identifier
       args <- P.many parseType
       return $ TApp name args
-  )
-    P.<|> (TName <$> identifier)
+      P.<|> (TName <$> identifier)
 
 parseArrow :: Parser TypeExpr
 parseArrow = parens $ do
@@ -149,14 +149,13 @@ parseArrow = parens $ do
 parsePattern :: Parser Pattern
 parsePattern =
   (reservedOp "_" >> return PWildcard)
-    P.<|> ( parens
-              ( do
-                  name <- identifier
-                  pats <- P.many parsePattern
-                  return $ PCtor name pats
-              )
-          )
-    P.<|> (P.try (P.string "()" >> return PUnit))
+    P.<|> parens
+      ( do
+          name <- identifier
+          pats <- P.many parsePattern
+          return $ PCtor name pats
+      )
+    P.<|> P.try (P.string "()" >> return PUnit)
     P.<|> (PVar <$> identifier)
 
 -- Constructors (def-type) --------------------------------------------------
@@ -173,15 +172,13 @@ parseAscription :: Parser Expr
 parseAscription = do
   reserved "as"
   e <- parseExpr
-  t <- parseType
-  return $ EAscription e t
+  EAscription e <$> parseType
 
 parseDefine :: Parser Expr
 parseDefine = do
   reserved "define"
   name <- identifier
-  expr <- parseExpr
-  return $ EDefine name expr
+  EDefine name <$> parseExpr
 
 parseLambda :: Parser Expr
 parseLambda = do
@@ -195,8 +192,7 @@ parseParam =
   P.try
     ( parens $ do
         n <- identifier
-        t <- parseType
-        return $ Param n (Just t)
+        Param n . Just <$> parseType
     )
     P.<|> (Param <$> identifier <*> pure Nothing)
 
@@ -231,7 +227,7 @@ parseIf = do
   c <- parseExpr
   t <- parseExpr
   e <- parseExpr
-  return $ EIf c t e
+  EIf c t <$> parseExpr
 
 parseBegin :: Parser Expr
 parseBegin = do
@@ -242,8 +238,7 @@ parseBegin = do
 parseQuote :: Parser Expr
 parseQuote = do
   reserved "quote"
-  e <- parseExpr
-  return $ EQuote e
+  EQuote <$> parseExpr
 
 parseDefType :: Parser Expr
 parseDefType = do
@@ -298,7 +293,7 @@ parseAtom =
   P.try parseNumber
     P.<|> P.try parseString
     P.<|> P.try parseBool
-    P.<|> P.try (parens (do _ <- P.char '\''; e <- parseExpr; return $ EQuote e)) -- '( ...) rare
+    P.<|> P.try (parens (do _ <- P.char '\''; EQuote <$> parseExpr)) -- '( ...) rare
     P.<|> parseSymbol
 
 parseExpr :: Parser Expr
