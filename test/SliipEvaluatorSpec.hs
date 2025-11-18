@@ -1,7 +1,6 @@
 module SliipEvaluatorSpec (spec) where
 
 import Sliip.Evaluator (eval)
-import Sliip.Parser (Atom (Builtin, Reference, SExprV, StringLiteral), SExpression (SExpr))
 import System.IO.Silently (capture_)
 import Test.Hspec (Spec, describe, it, shouldBe)
 
@@ -46,3 +45,21 @@ spec = do
       program <- readFile "test/data/displayHoge.lisp"
       out <- capture_ (eval program)
       out `shouldBe` "hoge\n"
+
+    it "supports function calls with parameters" $ do
+      let program =
+            unlines
+              [ "(define greet (lambda (name) (write-line name)))",
+                "(define main (lambda () (greet \"World\")))"
+              ]
+      out <- capture_ (eval program)
+      out `shouldBe` "World\n"
+
+    it "ignores type annotations" $ do
+      let program =
+            unlines
+              [ "(define typed (lambda ((x String)) (write-line x)))",
+                "(define main (lambda () (typed \"Test\")))"
+              ]
+      out <- capture_ (eval program)
+      out `shouldBe` "Test\n"
