@@ -10,7 +10,9 @@
     (-> String (-> String Void))))
 
 (define contextualPrinter
-  (makePrinterWithContext "Context:"))
+  (as
+    (makePrinterWithContext "Context:")
+    (-> Void)))
 
 (define main
   (as
