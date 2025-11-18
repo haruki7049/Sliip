@@ -11,9 +11,8 @@ module Sliip.Parser
   )
 where
 
-import Text.Parsec (ParseError, (<|>))
-import qualified Text.Parsec as P
-  ( alphaNum,
+import Text.Parsec (ParseError, (<|>),
+  alphaNum,
     char,
     eof,
     letter,
@@ -22,10 +21,10 @@ import qualified Text.Parsec as P
     many1,
     oneOf,
     optionMaybe,
-    parse,
     string,
     try,
   )
+import qualified Text.Parsec as TP (parse)
 import Text.Parsec.Language (emptyDef)
 import Text.Parsec.String (Parser)
 import Text.Parsec.Token
@@ -102,8 +101,8 @@ languageDef =
       commentStart = "#|",
       commentEnd = "|#",
       nestedComments = True,
-      identStart = P.letter <|> P.oneOf "+-*/<>=!?_",
-      identLetter = P.alphaNum <|> P.oneOf "+-*/<>=!?_-'",
+      identStart = letter <|> oneOf "+-*/<>=!?_",
+      identLetter = alphaNum <|> oneOf "+-*/<>=!?_-'",
       reservedNames =
         [ "define",
           "lambda",
@@ -173,20 +172,20 @@ parseSymbol = ESymbol <$> identifier'
 -- Type parser ---------------------------------------------------------------
 
 parseType :: Parser TypeExpr
-parseType = P.try parseArrow <|> parseTypeAtom
+parseType = try parseArrow <|> parseTypeAtom
 
 parseTypeAtom :: Parser TypeExpr
 parseTypeAtom =
   (parens' $ do
      name <- identifier'
-     args <- P.many parseType
+     args <- many parseType
      return $ TApp name args)
     <|> (TName <$> identifier')
 
 parseArrow :: Parser TypeExpr
 parseArrow = parens' $ do
   _ <- symbol' "->"
-  ts <- P.many1 parseType
+  ts <- many1 parseType
   return $ TArrow ts
 
 -- Pattern parser ------------------------------------------------------------
@@ -197,10 +196,10 @@ parsePattern =
     <|> parens'
       ( do
           name <- identifier'
-          pats <- P.many parsePattern
+          pats <- many parsePattern
           return $ PCtor name pats
       )
-    <|> P.try (P.string "()" >> return PUnit)
+    <|> try (string "()" >> return PUnit)
     <|> (PVar <$> identifier')
 
 -- Constructors (def-type) --------------------------------------------------
@@ -208,7 +207,7 @@ parsePattern =
 parseCtor :: Parser Ctor
 parseCtor = parens' $ do
   name <- identifier'
-  tys <- P.many parseType
+  tys <- many parseType
   return $ Ctor name tys
 
 -- Expressions ---------------------------------------------------------------
@@ -228,13 +227,13 @@ parseDefine = do
 parseLambda :: Parser Expr
 parseLambda = do
   reserved' "lambda"
-  params <- parens' (P.many parseParam)
-  body <- P.many1 parseExpr
+  params <- parens' (many parseParam)
+  body <- many1 parseExpr
   return $ ELambda params body
 
 parseParam :: Parser Param
 parseParam =
-  P.try
+  try
     ( parens' $ do
         n <- identifier'
         Param n . Just <$> parseType
@@ -244,8 +243,8 @@ parseParam =
 parseLetLike :: String -> Parser Expr
 parseLetLike kw = do
   reserved' kw
-  binds <- parens' (P.many parseBinding)
-  body <- P.many1 parseExpr
+  binds <- parens' (many parseBinding)
+  body <- many1 parseExpr
   case kw of
     "let" -> return $ ELet binds body
     "let*" -> return $ ELetStar binds body
@@ -253,7 +252,7 @@ parseLetLike kw = do
     _ -> fail "unknown let-like"
 
 parseBinding :: Parser (String, Expr)
-parseBinding = parens' $ P.try bindingWithType <|> bindingSimple
+parseBinding = parens' $ try bindingWithType <|> bindingSimple
   where
     bindingSimple = do
       name <- identifier'
@@ -262,7 +261,7 @@ parseBinding = parens' $ P.try bindingWithType <|> bindingSimple
     bindingWithType = do
       name <- identifier'
       -- try parse a type next; if it fails, backtrack and parse as expr
-      t <- P.try parseType
+      t <- try parseType
       initExpr <- parseExpr
       return (name, EAscription initExpr t)
 
@@ -276,7 +275,7 @@ parseIf = do
 parseBegin :: Parser Expr
 parseBegin = do
   reserved' "begin"
-  es <- P.many1 parseExpr
+  es <- many1 parseExpr
   return $ EBegin es
 
 parseQuote :: Parser Expr
@@ -288,8 +287,8 @@ parseDefType :: Parser Expr
 parseDefType = do
   reserved' "def-type"
   name <- identifier'
-  params <- parens' (P.many identifier')
-  ctors <- P.many1 parseCtor
+  params <- parens' (many identifier')
+  ctors <- many1 parseCtor
   return $ EDefType name params ctors
 
 parseMatch :: Parser Expr
@@ -297,10 +296,10 @@ parseMatch = do
   reserved' "match"
   expr <- parseExpr
   clauses <-
-    P.many1
+    many1
       ( parens' $ do
           pat <- parsePattern
-          body <- P.many1 parseExpr
+          body <- many1 parseExpr
           return (pat, body)
       )
   return $ EMatch expr clauses
@@ -310,7 +309,7 @@ parseMatch = do
 parseApplicationOrSpecial :: Parser Expr
 parseApplicationOrSpecial = parens' $ do
   whiteSpace'
-  look <- P.optionMaybe (P.lookAhead (P.many1 (P.letter <|> P.oneOf "+-*/<>=!?_-'")))
+  look <- optionMaybe (lookAhead (many1 (letter <|> oneOf "+-*/<>=!?_-'")))
   case look of
     Just "define" -> parseDefine
     Just "lambda" -> parseLambda
@@ -325,7 +324,7 @@ parseApplicationOrSpecial = parens' $ do
     Just "match" -> parseMatch
     _ -> do
       -- not one of the special forms: parse as application/list
-      es <- P.many parseExpr
+      es <- many parseExpr
       case es of
         [] -> return $ EList []
         (f : args) -> return $ EApp f args
@@ -334,25 +333,25 @@ parseApplicationOrSpecial = parens' $ do
 
 parseAtom :: Parser Expr
 parseAtom =
-  P.try parseNumber
-    <|> P.try parseString
-    <|> P.try parseBool
-    <|> P.try (parens' (do _ <- P.char '\''; EQuote <$> parseExpr)) -- '( ...) rare
+  try parseNumber
+    <|> try parseString
+    <|> try parseBool
+    <|> try (parens' (do _ <- char '\''; EQuote <$> parseExpr)) -- '( ...) rare
     <|> parseSymbol
 
 parseExpr :: Parser Expr
 parseExpr =
   whiteSpace'
-    *> ( P.try parseAtom
-           <|> P.try parseApplicationOrSpecial
+    *> ( try parseAtom
+           <|> try parseApplicationOrSpecial
        )
 
 -- Program -------------------------------------------------------------------
 
 parseProgram :: Parser Programs
-parseProgram = whiteSpace' *> P.many parseExpr <* P.eof
+parseProgram = whiteSpace' *> many parseExpr <* eof
 
 -- Public API ----------------------------------------------------------------
 
 parse :: String -> Either ParseError Programs
-parse = P.parse parseProgram ""
+parse = TP.parse parseProgram ""
