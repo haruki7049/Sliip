@@ -1,23 +1,22 @@
-{-|
-Module      : Sliip.Parser
-Description : Parser for the Sliip Lisp dialect
-Maintainer  : haruki7049
-
-This module provides a parser for Sliip, a Lisp dialect with additional features.
-The parser is built using the Parsec library and supports:
-
-* Basic Lisp forms: numbers, strings, booleans, symbols
-* Lambda expressions with optional type annotations
-* Various binding forms: @let@, @let*@, @letrec@
-* Conditional expressions: @if@
-* Sequential execution: @begin@
-* Quotation: @quote@
-* Algebraic data types: @def-type@
-* Pattern matching: @match@
-* Type ascriptions: @as@
-
-The parser produces an abstract syntax tree (AST) represented by the 'Expr' type.
--}
+-- |
+-- Module      : Sliip.Parser
+-- Description : Parser for the Sliip Lisp dialect
+-- Maintainer  : haruki7049
+--
+-- This module provides a parser for Sliip, a Lisp dialect with additional features.
+-- The parser is built using the Parsec library and supports:
+--
+-- * Basic Lisp forms: numbers, strings, booleans, symbols
+-- * Lambda expressions with optional type annotations
+-- * Various binding forms: @let@, @let*@, @letrec@
+-- * Conditional expressions: @if@
+-- * Sequential execution: @begin@
+-- * Quotation: @quote@
+-- * Algebraic data types: @def-type@
+-- * Pattern matching: @match@
+-- * Type ascriptions: @as@
+--
+-- The parser produces an abstract syntax tree (AST) represented by the 'Expr' type.
 module Sliip.Parser
   ( -- * Parser API
     parse,
@@ -77,24 +76,42 @@ import Text.Parsec.Token
 --
 -- Represents all forms that can appear in a Sliip program.
 data Expr
-  = ENumber Integer                -- ^ Integer literal
-  | EFloat Double                  -- ^ Floating-point literal
-  | EString String                 -- ^ String literal
-  | EBool Bool                     -- ^ Boolean literal
-  | ESymbol String                 -- ^ Variable reference
-  | EList [Expr]                   -- ^ List literal (currently unused)
-  | EDefine String Expr            -- ^ Top-level definition: @(define name expr)@
-  | ELambda [Param] [Expr]         -- ^ Lambda expression: @(lambda (params...) body...)@
-  | EIf Expr Expr Expr             -- ^ Conditional: @(if condition then else)@
-  | ELet [(String, Expr)] [Expr]   -- ^ Parallel let binding: @(let ((x e)...) body...)@
-  | ELetStar [(String, Expr)] [Expr] -- ^ Sequential let binding: @(let* ((x e)...) body...)@
-  | ELetRec [(String, Expr)] [Expr]  -- ^ Recursive let binding: @(letrec ((x e)...) body...)@
-  | EBegin [Expr]                  -- ^ Sequential execution: @(begin expr...)@
-  | EQuote Expr                    -- ^ Quotation: @(quote expr)@
-  | EAscription Expr TypeExpr      -- ^ Type ascription: @(as expr type)@
-  | EDefType String [String] [Ctor] -- ^ Type definition: @(def-type name (params...) ctors...)@
-  | EMatch Expr [(Pattern, [Expr])] -- ^ Pattern matching: @(match expr (pattern body...)...)@
-  | EApp Expr [Expr]               -- ^ Function application: @(f args...)@
+  = -- | Integer literal
+    ENumber Integer
+  | -- | Floating-point literal
+    EFloat Double
+  | -- | String literal
+    EString String
+  | -- | Boolean literal
+    EBool Bool
+  | -- | Variable reference
+    ESymbol String
+  | -- | List literal (currently unused)
+    EList [Expr]
+  | -- | Top-level definition: @(define name expr)@
+    EDefine String Expr
+  | -- | Lambda expression: @(lambda (params...) body...)@
+    ELambda [Param] [Expr]
+  | -- | Conditional: @(if condition then else)@
+    EIf Expr Expr Expr
+  | -- | Parallel let binding: @(let ((x e)...) body...)@
+    ELet [(String, Expr)] [Expr]
+  | -- | Sequential let binding: @(let* ((x e)...) body...)@
+    ELetStar [(String, Expr)] [Expr]
+  | -- | Recursive let binding: @(letrec ((x e)...) body...)@
+    ELetRec [(String, Expr)] [Expr]
+  | -- | Sequential execution: @(begin expr...)@
+    EBegin [Expr]
+  | -- | Quotation: @(quote expr)@
+    EQuote Expr
+  | -- | Type ascription: @(as expr type)@
+    EAscription Expr TypeExpr
+  | -- | Type definition: @(def-type name (params...) ctors...)@
+    EDefType String [String] [Ctor]
+  | -- | Pattern matching: @(match expr (pattern body...)...)@
+    EMatch Expr [(Pattern, [Expr])]
+  | -- | Function application: @(f args...)@
+    EApp Expr [Expr]
   deriving (Show, Eq)
 
 -- | Function parameter with optional type annotation.
@@ -103,9 +120,12 @@ data Param = Param String (Maybe TypeExpr)
 
 -- | Type expressions for type annotations.
 data TypeExpr
-  = TName String              -- ^ Simple type name: @Int@, @String@, etc.
-  | TApp String [TypeExpr]    -- ^ Type application: @(List Int)@
-  | TArrow [TypeExpr]         -- ^ Function type: @(-> a b c)@ means @a -> b -> c@
+  = -- | Simple type name: @Int@, @String@, etc.
+    TName String
+  | -- | Type application: @(List Int)@
+    TApp String [TypeExpr]
+  | -- | Function type: @(-> a b c)@ means @a -> b -> c@
+    TArrow [TypeExpr]
   deriving (Show, Eq)
 
 -- | Constructor for algebraic data types.
@@ -116,10 +136,14 @@ data Ctor = Ctor String [TypeExpr]
 
 -- | Pattern for pattern matching.
 data Pattern
-  = PVar String           -- ^ Variable pattern: binds to a variable
-  | PWildcard             -- ^ Wildcard pattern: @_@
-  | PUnit                 -- ^ Unit pattern: @()@
-  | PCtor String [Pattern] -- ^ Constructor pattern: @(Cons x xs)@
+  = -- | Variable pattern: binds to a variable
+    PVar String
+  | -- | Wildcard pattern: @_@
+    PWildcard
+  | -- | Unit pattern: @()@
+    PUnit
+  | -- | Constructor pattern: @(Cons x xs)@
+    PCtor String [Pattern]
   deriving (Show, Eq)
 
 -- | A program is a sequence of expressions (typically top-level definitions).

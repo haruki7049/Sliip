@@ -1,13 +1,12 @@
 {-# LANGUAGE RecordWildCards #-}
 
-{-|
-Module      : Main
-Description : Command-line interface for the Sliip Lisp interpreter
-Maintainer  : haruki7049
-
-This module provides the command-line interface for the Sliip Lisp interpreter.
-It handles argument parsing and invokes the evaluator on the specified Lisp source file.
--}
+-- |
+-- Module      : Main
+-- Description : Command-line interface for the Sliip Lisp interpreter
+-- Maintainer  : haruki7049
+--
+-- This module provides the command-line interface for the Sliip Lisp interpreter.
+-- It handles argument parsing and invokes the evaluator on the specified Lisp source file.
 module Main where
 
 import Options.Applicative (Parser, ParserInfo, execParser, help, helper, info, long, metavar, progDesc, short, strArgument, switch, (<**>))
@@ -30,7 +29,8 @@ run CLIArgument {..} = do
 
 -- | Command-line arguments for the Sliip interpreter.
 newtype CLIArgument = CLIArgument
-  { filepath :: String -- ^ Path to the Lisp source file to evaluate
+  { -- | Path to the Lisp source file to evaluate
+    filepath :: String
   }
   deriving (Read, Show)
 

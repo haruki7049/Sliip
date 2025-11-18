@@ -1,21 +1,20 @@
-{-|
-Module      : Sliip.Evaluator
-Description : Evaluator for the Sliip Lisp interpreter
-Maintainer  : haruki7049
-
-This module implements the evaluation engine for Sliip, a Lisp interpreter.
-It provides functionality to:
-
-* Parse and evaluate Lisp programs
-* Manage lexical environments with variable bindings
-* Execute lambda functions with closures
-* Handle thunks for lazy evaluation of definitions
-* Generate executable statements (currently limited to 'write-line')
-
-The evaluator uses a map-based environment for variable storage and supports
-basic Lisp features including lambda functions, variable references, and
-function application.
--}
+-- |
+-- Module      : Sliip.Evaluator
+-- Description : Evaluator for the Sliip Lisp interpreter
+-- Maintainer  : haruki7049
+--
+-- This module implements the evaluation engine for Sliip, a Lisp interpreter.
+-- It provides functionality to:
+--
+-- * Parse and evaluate Lisp programs
+-- * Manage lexical environments with variable bindings
+-- * Execute lambda functions with closures
+-- * Handle thunks for lazy evaluation of definitions
+-- * Generate executable statements (currently limited to 'write-line')
+--
+-- The evaluator uses a map-based environment for variable storage and supports
+-- basic Lisp features including lambda functions, variable references, and
+-- function application.
 module Sliip.Evaluator (eval) where
 
 import Control.Monad (forM_)
@@ -37,23 +36,36 @@ newtype Statement = WriteLine String
 
 -- | Errors that can occur during evaluation.
 data EvaluationError
-  = NoMainFound           -- ^ No 'main' function was found in the program
-  | InvalidForm Expr      -- ^ The expression is not a valid form
-  | InvalidExpr Expr      -- ^ The expression cannot be evaluated
-  | UnknownBuiltin String -- ^ Reference to an undefined built-in function
-  | UnknownReference String -- ^ Reference to an undefined variable
-  | TypeMismatch String   -- ^ Type mismatch during evaluation
+  = -- | No 'main' function was found in the program
+    NoMainFound
+  | -- | The expression is not a valid form
+    InvalidForm Expr
+  | -- | The expression cannot be evaluated
+    InvalidExpr Expr
+  | -- | Reference to an undefined built-in function
+    UnknownBuiltin String
+  | -- | Reference to an undefined variable
+    UnknownReference String
+  | -- | Type mismatch during evaluation
+    TypeMismatch String
   deriving (Show, Eq)
 
 -- | Runtime values in the Sliip interpreter.
 data Value
-  = VString String  -- ^ String value
-  | VNumber Integer -- ^ Integer value
-  | VFloat Double   -- ^ Floating-point value
-  | VBool Bool      -- ^ Boolean value
-  | VLambda [String] [Expr] Environment  -- ^ Lambda function with parameters, body, and closure
-  | VBuiltin String (Value -> Either EvaluationError Value) -- ^ Built-in function
-  | VThunk Expr Environment -- ^ Unevaluated expression with its environment (for lazy evaluation)
+  = -- | String value
+    VString String
+  | -- | Integer value
+    VNumber Integer
+  | -- | Floating-point value
+    VFloat Double
+  | -- | Boolean value
+    VBool Bool
+  | -- | Lambda function with parameters, body, and closure
+    VLambda [String] [Expr] Environment
+  | -- | Built-in function
+    VBuiltin String (Value -> Either EvaluationError Value)
+  | -- | Unevaluated expression with its environment (for lazy evaluation)
+    VThunk Expr Environment
 
 instance Show Value where
   show (VString s) = "VString " ++ show s

@@ -1,11 +1,10 @@
-{-|
-Module      : Sliip.Evaluator.Utils
-Description : Utility functions for the Sliip evaluator
-Maintainer  : haruki7049
-
-This module provides utility functions for working with Sliip expressions,
-primarily for checking expression types and structure.
--}
+-- |
+-- Module      : Sliip.Evaluator.Utils
+-- Description : Utility functions for the Sliip evaluator
+-- Maintainer  : haruki7049
+--
+-- This module provides utility functions for working with Sliip expressions,
+-- primarily for checking expression types and structure.
 module Sliip.Evaluator.Utils (isDefine, isMain, hasLambda) where
 
 import Sliip.Parser (Expr (..))
