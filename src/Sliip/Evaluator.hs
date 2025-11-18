@@ -130,6 +130,17 @@ evalExprToStatement env (EApp (ESymbol "write-line") [arg]) = do
     VString s -> Right [WriteLine s]
     _ -> Left (TypeMismatch "write-line expects string")
 evalExprToStatement env (EBegin exprs) = evalExprsToExecutable env exprs
+evalExprToStatement env (EApp func args) = do
+  -- Evaluate function application for side effects
+  funcVal <- evalExpr env func
+  argVals <- mapM (evalExpr env) args
+  case funcVal of
+    VLambda params body closureEnv
+      | length params == length argVals -> do
+          let localEnv = foldl (\e (p, a) -> insert p a e) closureEnv (zip params argVals)
+          evalExprsToExecutable localEnv body
+      | otherwise -> Left (TypeMismatch "Wrong number of arguments")
+    _ -> Right [] -- Non-lambda application, no side effects in our simple model
 evalExprToStatement _ _ = Right []
 
 getMain :: Programs -> Maybe Expr
