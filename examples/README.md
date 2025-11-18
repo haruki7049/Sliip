@@ -15,6 +15,7 @@ The `examples/` directory contains various sample programs demonstrating differe
 - **type-annotations.sliip** - Type system and explicit type annotations
 
 Run any example with:
+
 ```bash
 stack run -- examples/<filename>.sliip
 ```
