@@ -105,8 +105,8 @@ spec = do
       result
         `shouldSatisfy` ( \case
                             Left _ -> False
-                            Right [EDefine "main" (ELambda params body)] -> 
-                              params == [] && length body == 1
+                            Right [EDefine "main" (ELambda params body)] ->
+                              null params && length body == 1
                             _ -> False
                         )
 
