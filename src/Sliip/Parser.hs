@@ -11,11 +11,43 @@ module Sliip.Parser
   )
 where
 
-import Text.Parsec (ParseError)
+import Text.Parsec (ParseError, (<|>))
 import qualified Text.Parsec as P
+  ( alphaNum,
+    char,
+    eof,
+    letter,
+    lookAhead,
+    many,
+    many1,
+    oneOf,
+    optionMaybe,
+    parse,
+    string,
+    try,
+  )
 import Text.Parsec.Language (emptyDef)
 import Text.Parsec.String (Parser)
-import qualified Text.Parsec.Token as Tok
+import Text.Parsec.Token
+  ( LanguageDef,
+    TokenParser,
+    commentEnd,
+    commentLine,
+    commentStart,
+    identLetter,
+    identStart,
+    identifier,
+    makeTokenParser,
+    naturalOrFloat,
+    nestedComments,
+    parens,
+    reserved,
+    reservedNames,
+    reservedOp,
+    stringLiteral,
+    symbol,
+    whiteSpace,
+  )
 
 -- Extended AST --------------------------------------------------------------
 
@@ -63,16 +95,16 @@ type Programs = [Expr]
 
 -- Lexer ---------------------------------------------------------------------
 
-languageDef :: Tok.LanguageDef ()
+languageDef :: LanguageDef ()
 languageDef =
   emptyDef
-    { Tok.commentLine = ";",
-      Tok.commentStart = "#|",
-      Tok.commentEnd = "|#",
-      Tok.nestedComments = True,
-      Tok.identStart = P.letter P.<|> P.oneOf "+-*/<>=!?_",
-      Tok.identLetter = P.alphaNum P.<|> P.oneOf "+-*/<>=!?_-'",
-      Tok.reservedNames =
+    { commentLine = ";",
+      commentStart = "#|",
+      commentEnd = "|#",
+      nestedComments = True,
+      identStart = P.letter <|> P.oneOf "+-*/<>=!?_",
+      identLetter = P.alphaNum <|> P.oneOf "+-*/<>=!?_-'",
+      reservedNames =
         [ "define",
           "lambda",
           "let",
@@ -91,66 +123,69 @@ languageDef =
         ]
     }
 
-lexer :: Tok.TokenParser ()
-lexer = Tok.makeTokenParser languageDef
+lexer :: TokenParser ()
+lexer = makeTokenParser languageDef
 
-parens :: Parser a -> Parser a
-parens = Tok.parens lexer
+parens' :: Parser a -> Parser a
+parens' = parens lexer
 
-identifier :: Parser String
-identifier = Tok.identifier lexer
+identifier' :: Parser String
+identifier' = identifier lexer
 
-reserved :: String -> Parser ()
-reserved = Tok.reserved lexer
+reserved' :: String -> Parser ()
+reserved' = reserved lexer
 
-reservedOp :: String -> Parser ()
-reservedOp = Tok.reservedOp lexer
+reservedOp' :: String -> Parser ()
+reservedOp' = reservedOp lexer
 
-stringLiteral :: Parser String
-stringLiteral = Tok.stringLiteral lexer
+stringLiteral' :: Parser String
+stringLiteral' = stringLiteral lexer
 
-naturalOrFloat :: Parser (Either Integer Double)
-naturalOrFloat = Tok.naturalOrFloat lexer
+naturalOrFloat' :: Parser (Either Integer Double)
+naturalOrFloat' = naturalOrFloat lexer
 
-whiteSpace :: Parser ()
-whiteSpace = Tok.whiteSpace lexer
+whiteSpace' :: Parser ()
+whiteSpace' = whiteSpace lexer
+
+symbol' :: String -> Parser String
+symbol' = symbol lexer
 
 -- Basic parsers --------------------------------------------------------------
 
 parseNumber :: Parser Expr
 parseNumber = do
-  nf <- naturalOrFloat
+  nf <- naturalOrFloat'
   return $ case nf of
     Left i -> ENumber i
     Right d -> EFloat d
 
 parseString :: Parser Expr
-parseString = EString <$> stringLiteral
+parseString = EString <$> stringLiteral'
 
 parseBool :: Parser Expr
 parseBool =
-  (reserved "true" >> return (EBool True))
-    P.<|> (reserved "false" >> return (EBool False))
+  (reserved' "true" >> return (EBool True))
+    <|> (reserved' "false" >> return (EBool False))
 
 parseSymbol :: Parser Expr
-parseSymbol = ESymbol <$> identifier
+parseSymbol = ESymbol <$> identifier'
 
 -- Type parser ---------------------------------------------------------------
 
 parseType :: Parser TypeExpr
-parseType = P.try parseArrow P.<|> parseTypeAtom
+parseType = P.try parseArrow <|> parseTypeAtom
 
 parseTypeAtom :: Parser TypeExpr
 parseTypeAtom =
-  (parens $ do
-     name <- identifier
+  (parens' $ do
+     name <- identifier'
      args <- P.many parseType
      return $ TApp name args)
-    P.<|> (TName <$> identifier)
+    <|> (TName <$> identifier')
 
 parseArrow :: Parser TypeExpr
-parseArrow = parens $ do
-  _ <- Tok.symbol lexer "->"
+parseArrow = parens' $ do
+  _ <- symbol' "->"
   ts <- P.many1 parseType
   return $ TArrow ts
 
@@ -158,21 +193,21 @@ parseArrow = parens $ do
 
 parsePattern :: Parser Pattern
 parsePattern =
-  (reservedOp "_" >> return PWildcard)
-    P.<|> parens
+  (reservedOp' "_" >> return PWildcard)
+    <|> parens'
       ( do
-          name <- identifier
+          name <- identifier'
           pats <- P.many parsePattern
           return $ PCtor name pats
       )
-    P.<|> P.try (P.string "()" >> return PUnit)
-    P.<|> (PVar <$> identifier)
+    <|> P.try (P.string "()" >> return PUnit)
+    <|> (PVar <$> identifier')
 
 -- Constructors (def-type) --------------------------------------------------
 
 parseCtor :: Parser Ctor
-parseCtor = parens $ do
-  name <- identifier
+parseCtor = parens' $ do
+  name <- identifier'
   tys <- P.many parseType
   return $ Ctor name tys
 
@@ -180,36 +215,36 @@ parseCtor = parens $ do
 
 parseAscription :: Parser Expr
 parseAscription = do
-  reserved "as"
+  reserved' "as"
   e <- parseExpr
   EAscription e <$> parseType
 
 parseDefine :: Parser Expr
 parseDefine = do
-  reserved "define"
-  name <- identifier
+  reserved' "define"
+  name <- identifier'
   EDefine name <$> parseExpr
 
 parseLambda :: Parser Expr
 parseLambda = do
-  reserved "lambda"
-  params <- parens (P.many parseParam)
+  reserved' "lambda"
+  params <- parens' (P.many parseParam)
   body <- P.many1 parseExpr
   return $ ELambda params body
 
 parseParam :: Parser Param
 parseParam =
   P.try
-    ( parens $ do
-        n <- identifier
+    ( parens' $ do
+        n <- identifier'
         Param n . Just <$> parseType
     )
-    P.<|> (Param <$> identifier <*> pure Nothing)
+    <|> (Param <$> identifier' <*> pure Nothing)
 
 parseLetLike :: String -> Parser Expr
 parseLetLike kw = do
-  reserved kw
-  binds <- parens (P.many parseBinding)
+  reserved' kw
+  binds <- parens' (P.many parseBinding)
   body <- P.many1 parseExpr
   case kw of
     "let" -> return $ ELet binds body
@@ -218,14 +253,14 @@ parseLetLike kw = do
     _ -> fail "unknown let-like"
 
 parseBinding :: Parser (String, Expr)
-parseBinding = parens $ P.try bindingWithType P.<|> bindingSimple
+parseBinding = parens' $ P.try bindingWithType <|> bindingSimple
   where
     bindingSimple = do
-      name <- identifier
+      name <- identifier'
       expr <- parseExpr
       return (name, expr)
     bindingWithType = do
-      name <- identifier
+      name <- identifier'
       -- try parse a type next; if it fails, backtrack and parse as expr
       t <- P.try parseType
       initExpr <- parseExpr
@@ -233,37 +268,37 @@ parseBinding = parens $ P.try bindingWithType P.<|> bindingSimple
 
 parseIf :: Parser Expr
 parseIf = do
-  reserved "if"
+  reserved' "if"
   c <- parseExpr
   t <- parseExpr
   EIf c t <$> parseExpr
 
 parseBegin :: Parser Expr
 parseBegin = do
-  reserved "begin"
+  reserved' "begin"
   es <- P.many1 parseExpr
   return $ EBegin es
 
 parseQuote :: Parser Expr
 parseQuote = do
-  reserved "quote"
+  reserved' "quote"
   EQuote <$> parseExpr
 
 parseDefType :: Parser Expr
 parseDefType = do
-  reserved "def-type"
-  name <- identifier
-  params <- parens (P.many identifier)
+  reserved' "def-type"
+  name <- identifier'
+  params <- parens' (P.many identifier')
   ctors <- P.many1 parseCtor
   return $ EDefType name params ctors
 
 parseMatch :: Parser Expr
 parseMatch = do
-  reserved "match"
+  reserved' "match"
   expr <- parseExpr
   clauses <-
     P.many1
-      ( parens $ do
+      ( parens' $ do
           pat <- parsePattern
           body <- P.many1 parseExpr
           return (pat, body)
@@ -273,9 +308,9 @@ parseMatch = do
 -- Generic list/app parsing --------------------------------------------------
 
 parseApplicationOrSpecial :: Parser Expr
-parseApplicationOrSpecial = parens $ do
-  whiteSpace
-  look <- P.optionMaybe (P.lookAhead (P.many1 (P.letter P.<|> P.oneOf "+-*/<>=!?_-'")))
+parseApplicationOrSpecial = parens' $ do
+  whiteSpace'
+  look <- P.optionMaybe (P.lookAhead (P.many1 (P.letter <|> P.oneOf "+-*/<>=!?_-'")))
   case look of
     Just "define" -> parseDefine
     Just "lambda" -> parseLambda
@@ -300,22 +335,22 @@ parseApplicationOrSpecial = parens $ do
 parseAtom :: Parser Expr
 parseAtom =
   P.try parseNumber
-    P.<|> P.try parseString
-    P.<|> P.try parseBool
-    P.<|> P.try (parens (do _ <- P.char '\''; EQuote <$> parseExpr)) -- '( ...) rare
-    P.<|> parseSymbol
+    <|> P.try parseString
+    <|> P.try parseBool
+    <|> P.try (parens' (do _ <- P.char '\''; EQuote <$> parseExpr)) -- '( ...) rare
+    <|> parseSymbol
 
 parseExpr :: Parser Expr
 parseExpr =
-  whiteSpace
+  whiteSpace'
     *> ( P.try parseAtom
-           P.<|> P.try parseApplicationOrSpecial
+           <|> P.try parseApplicationOrSpecial
        )
 
 -- Program -------------------------------------------------------------------
 
 parseProgram :: Parser Programs
-parseProgram = whiteSpace *> P.many parseExpr <* P.eof
+parseProgram = whiteSpace' *> P.many parseExpr <* P.eof
 
 -- Public API ----------------------------------------------------------------
 
