@@ -1,12 +1,45 @@
-module Sliip.Parser (parse) where
+module Sliip.Parser
+  ( -- * New Parser (Extended Syntax)
+    parseExtended,
+    ExtendedPrograms,
+    Expr (..),
+    Param (..),
+    TypeExpr (..),
+    Ctor (..),
+    Pattern (..),
+    -- * Legacy Parser (S-Expression) - Default for compatibility
+    parse,
+    parseLegacy,
+    programs,
+    Programs,
+    SExpression (..),
+    Atom (..),
+  )
+where
 
-import Text.Parsec (ParseError)
+import Text.Parsec (ParseError, choice, eof, many, (<|>))
 import qualified Text.Parsec as P
+import Text.Parsec.Char (alphaNum, letter, oneOf)
 import Text.Parsec.Language (emptyDef)
 import Text.Parsec.String (Parser)
+import Text.Parsec.Token (LanguageDef, TokenParser, caseSensitive, commentEnd, commentLine, commentStart, identLetter, identStart, makeTokenParser, nestedComments, opLetter, opStart, reservedNames, reservedOpNames)
 import qualified Text.Parsec.Token as Tok
+import qualified Text.Parsec.Token as TT (identifier, reserved, stringLiteral, symbol, whiteSpace)
 
--- AST -----------------------------------------------------------------------
+-- Legacy S-Expression AST (for backward compatibility) ----------------------
+
+newtype SExpression
+  = SExpr [Atom]
+  deriving (Show, Eq)
+
+data Atom
+  = StringLiteral String
+  | Builtin String
+  | Reference String
+  | SExprV SExpression
+  deriving (Show, Eq)
+
+-- New Extended AST ----------------------------------------------------------
 
 data Expr
   = ENumber Integer
@@ -48,7 +81,7 @@ data Pattern
   | PCtor String [Pattern]
   deriving (Show)
 
-type Programs = [Expr]
+type ExtendedPrograms = [Expr]
 
 -- Lexer ---------------------------------------------------------------------
 
@@ -304,10 +337,78 @@ parseExpr =
 
 -- Program -------------------------------------------------------------------
 
-parseProgram :: Parser Programs
+parseProgram :: Parser ExtendedPrograms
 parseProgram = whiteSpace *> P.many parseExpr <* P.eof
 
--- Public API ----------------------------------------------------------------
+-- Public API (New Parser) ---------------------------------------------------
 
+parseExtended :: String -> Either ParseError ExtendedPrograms
+parseExtended = P.parse parseProgram ""
+
+-- Legacy S-Expression Parser (for backward compatibility) --------------------
+
+sliipStyle :: LanguageDef st
+sliipStyle =
+  emptyDef
+    { commentStart = "",
+      commentEnd = "",
+      commentLine = ";",
+      nestedComments = True,
+      identStart = letter,
+      identLetter = alphaNum <|> oneOf "_:!#$%&*+./<=>?@\\^|-~'",
+      opStart = opLetter sliipStyle,
+      opLetter = oneOf "",
+      reservedOpNames = [],
+      reservedNames = ["define", "lambda", "main", "write-line", "progn"],
+      caseSensitive = True
+    }
+
+legacyLexer :: TokenParser ()
+legacyLexer = makeTokenParser sliipStyle
+
+legacySymbol :: String -> Parser String
+legacySymbol = TT.symbol legacyLexer
+
+legacyWhitespace :: Parser ()
+legacyWhitespace = TT.whiteSpace legacyLexer
+
+legacyIdentifier :: Parser String
+legacyIdentifier = TT.identifier legacyLexer
+
+legacyBuiltin :: Parser String
+legacyBuiltin =
+  choice (map (\kw -> TT.reserved legacyLexer kw >> return kw) $ reservedNames sliipStyle)
+
+legacyStringLiteral :: Parser String
+legacyStringLiteral = TT.stringLiteral legacyLexer
+
+sexpr :: Parser SExpression
+sexpr = do
+  _ <- legacySymbol "("
+  x <- many atom
+  _ <- legacySymbol ")"
+  return (SExpr x)
+
+atom :: Parser Atom
+atom =
+  (SExprV <$> sexpr)
+    <|> (Builtin <$> legacyBuiltin)
+    <|> (StringLiteral <$> legacyStringLiteral)
+    <|> (Reference <$> legacyIdentifier)
+
+type Programs = [SExpression]
+
+programs :: Parser Programs
+programs = do
+  legacyWhitespace
+  expr <- many sexpr
+  legacyWhitespace
+  eof
+  return expr
+
+parseLegacy :: String -> Either ParseError Programs
+parseLegacy = P.parse programs ""
+
+-- Default parse uses the legacy parser for backward compatibility
 parse :: String -> Either ParseError Programs
-parse = P.parse parseProgram ""
+parse = parseLegacy
