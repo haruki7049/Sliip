@@ -1,0 +1,17 @@
+(define main
+  (as
+    (lambda ()
+      (displayFunc hogeString))
+  (-> Void)))
+
+(define fuagString
+  (as "fuga" String))
+
+(define hogeString
+  (as "hoge" String))
+
+(define displayFunc
+  (as
+    (lambda (str)
+      (write-line str))
+    (-> Void)))

@@ -1,0 +1,8 @@
+(define s
+  (as "Hello, Sliip!" String))
+
+(define main
+  (as
+    (lambda ()
+      (write-line s))
+    (-> Void)))
