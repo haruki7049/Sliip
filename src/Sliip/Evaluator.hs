@@ -75,7 +75,7 @@ lookupVar name env =
     Nothing -> Left (UnknownReference name)
 
 evalMain :: Environment -> Expr -> Either EvaluationError Executable
-evalMain env (EDefine "main" body) = 
+evalMain env (EDefine "main" body) =
   case body of
     ELambda params bodyExprs -> do
       let paramNames = map (\(Param name _) -> name) params
@@ -83,7 +83,7 @@ evalMain env (EDefine "main" body) =
     _ -> do
       val <- evalExpr env body
       case val of
-        VLambda params bodyExprs closureEnv -> 
+        VLambda params bodyExprs closureEnv ->
           evalLambdaBody closureEnv params bodyExprs
         _ -> Left (InvalidForm (EDefine "main" body))
 evalMain _ expr = Left (InvalidForm expr)
