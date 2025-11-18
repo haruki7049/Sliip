@@ -26,8 +26,3 @@ sliip.cabal
 .direnv/
 result/
 result-*/
-
-# Parser artifacts
-parser/parser
-parser/*.hi
-parser/*.o
