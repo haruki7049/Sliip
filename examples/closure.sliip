@@ -1,0 +1,21 @@
+; Closures example
+; This demonstrates how closures capture their environment
+
+(define makePrinterWithContext
+  (as
+    (lambda ((context String))
+      (lambda ((message String))
+        (write-line context)
+        (write-line message)))
+    (-> String (-> String Void))))
+
+(define contextualPrinter
+  (as
+    (makePrinterWithContext "Context:")
+    (-> Void)))
+
+(define main
+  (as
+    (lambda ()
+      (contextualPrinter "This is the message"))
+    (-> Void)))

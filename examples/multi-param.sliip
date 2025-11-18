@@ -1,0 +1,21 @@
+; Multiple parameter functions
+; This demonstrates functions with multiple parameters
+
+(define combineAndPrint
+  (as
+    (lambda ((first String) (second String))
+      (write-line first)
+      (write-line second))
+    (-> String String Void)))
+
+(define part1
+  (as "First part" String))
+
+(define part2
+  (as "Second part" String))
+
+(define main
+  (as
+    (lambda ()
+      (combineAndPrint part1 part2))
+    (-> Void)))

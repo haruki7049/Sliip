@@ -1,0 +1,19 @@
+; Variable definitions and references
+; This example shows how to define and use variables
+
+(define firstName
+  (as "Alice" String))
+
+(define lastName
+  (as "Wonderland" String))
+
+(define greeting
+  (as "Hello from variables!" String))
+
+(define main
+  (as
+    (lambda ()
+      (write-line greeting)
+      (write-line firstName)
+      (write-line lastName))
+    (-> Void)))

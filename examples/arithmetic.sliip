@@ -1,0 +1,17 @@
+; Arithmetic operations example
+; This example demonstrates working with numbers
+
+(define pi
+  (as 3.14159 Float))
+
+(define radius
+  (as 5 Integer))
+
+(define greeting
+  (as "Arithmetic operations demonstration" String))
+
+(define main
+  (as
+    (lambda ()
+      (write-line greeting))
+    (-> Void)))

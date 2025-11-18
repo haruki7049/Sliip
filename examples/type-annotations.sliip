@@ -1,0 +1,26 @@
+; Type annotations example
+; This demonstrates the type system with explicit annotations
+
+(define typedString
+  (as "This is a typed string" String))
+
+(define typedNumber
+  (as 42 Integer))
+
+(define typedFloat
+  (as 3.14 Float))
+
+(define typedBool
+  (as true Bool))
+
+(define typedFunction
+  (as
+    (lambda ((x String))
+      (write-line x))
+    (-> String Void)))
+
+(define main
+  (as
+    (lambda ()
+      (typedFunction typedString))
+    (-> Void)))

@@ -1,0 +1,22 @@
+; Higher-order functions example
+; This demonstrates functions that return functions
+
+(define makeGreeter
+  (as
+    (lambda ((greeting String))
+      (lambda ()
+        (write-line greeting)))
+    (-> String (-> Void))))
+
+(define helloGreeter
+  (makeGreeter "Hello, World!"))
+
+(define hiGreeter
+  (makeGreeter "Hi there!"))
+
+(define main
+  (as
+    (lambda ()
+      (helloGreeter)
+      (hiGreeter))
+    (-> Void)))

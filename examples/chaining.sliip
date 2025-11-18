@@ -1,0 +1,29 @@
+; Function chaining example
+; This shows how to chain function calls together
+
+(define addPrefix
+  (as
+    (lambda ((text String))
+      text)
+    (-> String String)))
+
+(define addSuffix
+  (as
+    (lambda ((text String))
+      text)
+    (-> String String)))
+
+(define processText
+  (as
+    (lambda ((text String))
+      (addSuffix (addPrefix text)))
+    (-> String String)))
+
+(define message
+  (as "Message" String))
+
+(define main
+  (as
+    (lambda ()
+      (write-line (processText message)))
+    (-> Void)))
