@@ -1,0 +1,17 @@
+; Recursive variable references
+; This shows how variables can reference each other
+
+(define messageC
+  messageB)
+
+(define messageB
+  messageA)
+
+(define messageA
+  (as "Chained variable reference!" String))
+
+(define main
+  (as
+    (lambda ()
+      (write-line messageC))
+    (-> Void)))

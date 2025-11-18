@@ -1,0 +1,29 @@
+; Nested function calls example
+; This shows deeply nested function invocations
+
+(define identity
+  (as
+    (lambda ((x String))
+      x)
+    (-> String String)))
+
+(define passThrough
+  (as
+    (lambda ((x String))
+      (identity x))
+    (-> String String)))
+
+(define deepCall
+  (as
+    (lambda ((x String))
+      (passThrough (identity x)))
+    (-> String String)))
+
+(define message
+  (as "Nested calls work!" String))
+
+(define main
+  (as
+    (lambda ()
+      (write-line (deepCall message)))
+    (-> Void)))

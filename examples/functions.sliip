@@ -1,0 +1,27 @@
+; Lambda functions and function composition
+; This example demonstrates defining and calling functions
+
+(define greet
+  (as
+    (lambda ((name String))
+      (write-line name))
+    (-> String Void)))
+
+(define makeGreeting
+  (as
+    (lambda ((name String))
+      name)
+    (-> String String)))
+
+(define alice
+  (as "Alice" String))
+
+(define bob
+  (as "Bob" String))
+
+(define main
+  (as
+    (lambda ()
+      (greet (makeGreeting alice))
+      (greet (makeGreeting bob)))
+    (-> Void)))
