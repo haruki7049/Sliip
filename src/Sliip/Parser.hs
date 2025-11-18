@@ -2,6 +2,7 @@ module Sliip.Parser
   ( -- * Parser API
     parse,
     Programs,
+
     -- * AST Types
     Expr (..),
     Param (..),
@@ -11,8 +12,9 @@ module Sliip.Parser
   )
 where
 
-import Text.Parsec (ParseError, (<|>),
-  alphaNum,
+import Text.Parsec
+  ( ParseError,
+    alphaNum,
     char,
     eof,
     letter,
@@ -23,6 +25,7 @@ import Text.Parsec (ParseError, (<|>),
     optionMaybe,
     string,
     try,
+    (<|>),
   )
 import qualified Text.Parsec as TP (parse)
 import Text.Parsec.Language (emptyDef)
@@ -176,10 +179,11 @@ parseType = try parseArrow <|> parseTypeAtom
 
 parseTypeAtom :: Parser TypeExpr
 parseTypeAtom =
-  (parens' $ do
-     name <- identifier'
-     args <- many parseType
-     return $ TApp name args)
+  ( parens' $ do
+      name <- identifier'
+      args <- many parseType
+      return $ TApp name args
+  )
     <|> (TName <$> identifier')
 
 parseArrow :: Parser TypeExpr
