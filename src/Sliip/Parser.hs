@@ -2,9 +2,9 @@ module Sliip.Parser (parse) where
 
 import Text.Parsec (ParseError)
 import qualified Text.Parsec as P
+import Text.Parsec.Language (emptyDef)
 import Text.Parsec.String (Parser)
 import qualified Text.Parsec.Token as Tok
-import Text.Parsec.Language (emptyDef)
 
 -- AST -----------------------------------------------------------------------
 
@@ -35,7 +35,7 @@ data Param = Param String (Maybe TypeExpr)
 data TypeExpr
   = TName String
   | TApp String [TypeExpr]
-  | TArrow [TypeExpr]   -- (-> a b c)
+  | TArrow [TypeExpr] -- (-> a b c)
   deriving (Show)
 
 data Ctor = Ctor String [TypeExpr]
@@ -53,19 +53,32 @@ type Programs = [Expr]
 -- Lexer ---------------------------------------------------------------------
 
 languageDef :: Tok.LanguageDef ()
-languageDef = emptyDef
-  { Tok.commentLine     = ";"
-  , Tok.commentStart    = "#|"
-  , Tok.commentEnd      = "|#"
-  , Tok.nestedComments  = True
-  , Tok.identStart      = P.letter P.<|> P.oneOf "+-*/<>=!?_"
-  , Tok.identLetter     = P.alphaNum P.<|> P.oneOf "+-*/<>=!?_-'"
-  , Tok.reservedNames   =
-      [ "define", "lambda", "let", "let*", "letrec"
-      , "if", "begin", "quote", "def-type", "match", "as"
-      , "true", "false", "Nil", "Cons"
-      ]
-  }
+languageDef =
+  emptyDef
+    { Tok.commentLine = ";",
+      Tok.commentStart = "#|",
+      Tok.commentEnd = "|#",
+      Tok.nestedComments = True,
+      Tok.identStart = P.letter P.<|> P.oneOf "+-*/<>=!?_",
+      Tok.identLetter = P.alphaNum P.<|> P.oneOf "+-*/<>=!?_-'",
+      Tok.reservedNames =
+        [ "define",
+          "lambda",
+          "let",
+          "let*",
+          "letrec",
+          "if",
+          "begin",
+          "quote",
+          "def-type",
+          "match",
+          "as",
+          "true",
+          "false",
+          "Nil",
+          "Cons"
+        ]
+    }
 
 lexer :: Tok.TokenParser ()
 lexer = Tok.makeTokenParser languageDef
@@ -97,15 +110,16 @@ parseNumber :: Parser Expr
 parseNumber = do
   nf <- naturalOrFloat
   return $ case nf of
-    Left i  -> ENumber i
+    Left i -> ENumber i
     Right d -> EFloat d
 
 parseString :: Parser Expr
 parseString = EString <$> stringLiteral
 
 parseBool :: Parser Expr
-parseBool = (reserved "true" >> return (EBool True))
-        P.<|> (reserved "false" >> return (EBool False))
+parseBool =
+  (reserved "true" >> return (EBool True))
+    P.<|> (reserved "false" >> return (EBool False))
 
 parseSymbol :: Parser Expr
 parseSymbol = ESymbol <$> identifier
@@ -117,11 +131,12 @@ parseType = P.try parseArrow P.<|> parseTypeAtom
 
 parseTypeAtom :: Parser TypeExpr
 parseTypeAtom =
-      (parens $ do
-         name <- identifier
-         args <- P.many parseType
-         return $ TApp name args)
-  P.<|> (TName <$> identifier)
+  ( parens $ do
+      name <- identifier
+      args <- P.many parseType
+      return $ TApp name args
+  )
+    P.<|> (TName <$> identifier)
 
 parseArrow :: Parser TypeExpr
 parseArrow = parens $ do
@@ -133,20 +148,23 @@ parseArrow = parens $ do
 
 parsePattern :: Parser Pattern
 parsePattern =
-      (reservedOp "_" >> return PWildcard)
-  P.<|> (parens (do
-         name <- identifier
-         pats <- P.many parsePattern
-         return $ PCtor name pats))
-  P.<|> (P.try (P.string "()" >> return PUnit))
-  P.<|> (PVar <$> identifier)
+  (reservedOp "_" >> return PWildcard)
+    P.<|> ( parens
+              ( do
+                  name <- identifier
+                  pats <- P.many parsePattern
+                  return $ PCtor name pats
+              )
+          )
+    P.<|> (P.try (P.string "()" >> return PUnit))
+    P.<|> (PVar <$> identifier)
 
 -- Constructors (def-type) --------------------------------------------------
 
 parseCtor :: Parser Ctor
 parseCtor = parens $ do
   name <- identifier
-  tys  <- P.many parseType
+  tys <- P.many parseType
   return $ Ctor name tys
 
 -- Expressions ---------------------------------------------------------------
@@ -173,22 +191,25 @@ parseLambda = do
   return $ ELambda params body
 
 parseParam :: Parser Param
-parseParam = P.try (parens $ do
-                     n <- identifier
-                     t <- parseType
-                     return $ Param n (Just t))
-             P.<|> (Param <$> identifier <*> pure Nothing)
+parseParam =
+  P.try
+    ( parens $ do
+        n <- identifier
+        t <- parseType
+        return $ Param n (Just t)
+    )
+    P.<|> (Param <$> identifier <*> pure Nothing)
 
 parseLetLike :: String -> Parser Expr
 parseLetLike kw = do
   reserved kw
   binds <- parens (P.many parseBinding)
-  body  <- P.many1 parseExpr
+  body <- P.many1 parseExpr
   case kw of
-    "let"   -> return $ ELet binds body
-    "let*"  -> return $ ELetStar binds body
-    "letrec"-> return $ ELetRec binds body
-    _       -> fail "unknown let-like"
+    "let" -> return $ ELet binds body
+    "let*" -> return $ ELetStar binds body
+    "letrec" -> return $ ELetRec binds body
+    _ -> fail "unknown let-like"
 
 parseBinding :: Parser (String, Expr)
 parseBinding = parens $ P.try bindingWithType P.<|> bindingSimple
@@ -236,10 +257,13 @@ parseMatch :: Parser Expr
 parseMatch = do
   reserved "match"
   expr <- parseExpr
-  clauses <- P.many1 (parens $ do
-                      pat <- parsePattern
-                      body <- P.many1 parseExpr
-                      return (pat, body))
+  clauses <-
+    P.many1
+      ( parens $ do
+          pat <- parsePattern
+          body <- P.many1 parseExpr
+          return (pat, body)
+      )
   return $ EMatch expr clauses
 
 -- Generic list/app parsing --------------------------------------------------
@@ -249,39 +273,40 @@ parseApplicationOrSpecial = parens $ do
   whiteSpace
   look <- P.optionMaybe (P.lookAhead (P.many1 (P.letter P.<|> P.oneOf "+-*/<>=!?_-'")))
   case look of
-    Just "define"   -> parseDefine
-    Just "lambda"   -> parseLambda
-    Just "let"      -> parseLetLike "let"
-    Just "let*"     -> parseLetLike "let*"
-    Just "letrec"   -> parseLetLike "letrec"
-    Just "if"       -> parseIf
-    Just "begin"    -> parseBegin
-    Just "quote"    -> parseQuote
-    Just "as"       -> parseAscription
+    Just "define" -> parseDefine
+    Just "lambda" -> parseLambda
+    Just "let" -> parseLetLike "let"
+    Just "let*" -> parseLetLike "let*"
+    Just "letrec" -> parseLetLike "letrec"
+    Just "if" -> parseIf
+    Just "begin" -> parseBegin
+    Just "quote" -> parseQuote
+    Just "as" -> parseAscription
     Just "def-type" -> parseDefType
-    Just "match"    -> parseMatch
+    Just "match" -> parseMatch
     _ -> do
       -- not one of the special forms: parse as application/list
       es <- P.many parseExpr
       case es of
         [] -> return $ EList []
-        (f:args) -> return $ EApp f args
+        (f : args) -> return $ EApp f args
 
 -- Top-level expression parser (includes atom parsers) ----------------------
 
 parseAtom :: Parser Expr
 parseAtom =
-      P.try parseNumber
-  P.<|> P.try parseString
-  P.<|> P.try parseBool
-  P.<|> P.try (parens (do { _ <- P.char '\''; e <- parseExpr; return $ EQuote e })) -- '( ...) rare
-  P.<|> parseSymbol
+  P.try parseNumber
+    P.<|> P.try parseString
+    P.<|> P.try parseBool
+    P.<|> P.try (parens (do _ <- P.char '\''; e <- parseExpr; return $ EQuote e)) -- '( ...) rare
+    P.<|> parseSymbol
 
 parseExpr :: Parser Expr
-parseExpr = whiteSpace *> (
-      P.try parseAtom
-  P.<|> P.try parseApplicationOrSpecial
-  )
+parseExpr =
+  whiteSpace
+    *> ( P.try parseAtom
+           P.<|> P.try parseApplicationOrSpecial
+       )
 
 -- Program -------------------------------------------------------------------
 
