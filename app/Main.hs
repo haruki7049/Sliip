@@ -3,10 +3,7 @@
 {-|
 Module      : Main
 Description : Command-line interface for the Sliip Lisp interpreter
-Copyright   : (c) Sliip Contributors
-License     : MIT
 Maintainer  : haruki7049
-Stability   : experimental
 
 This module provides the command-line interface for the Sliip Lisp interpreter.
 It handles argument parsing and invokes the evaluator on the specified Lisp source file.

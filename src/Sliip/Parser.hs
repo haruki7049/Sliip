@@ -1,10 +1,7 @@
 {-|
 Module      : Sliip.Parser
 Description : Parser for the Sliip Lisp dialect
-Copyright   : (c) Sliip Contributors
-License     : MIT
 Maintainer  : haruki7049
-Stability   : experimental
 
 This module provides a parser for Sliip, a Lisp dialect with additional features.
 The parser is built using the Parsec library and supports:

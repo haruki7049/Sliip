@@ -1,10 +1,7 @@
 {-|
 Module      : Sliip.Evaluator.Utils
 Description : Utility functions for the Sliip evaluator
-Copyright   : (c) Sliip Contributors
-License     : MIT
 Maintainer  : haruki7049
-Stability   : experimental
 
 This module provides utility functions for working with Sliip expressions,
 primarily for checking expression types and structure.

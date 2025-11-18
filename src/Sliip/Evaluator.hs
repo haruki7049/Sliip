@@ -1,10 +1,7 @@
 {-|
 Module      : Sliip.Evaluator
 Description : Evaluator for the Sliip Lisp interpreter
-Copyright   : (c) Sliip Contributors
-License     : MIT
 Maintainer  : haruki7049
-Stability   : experimental
 
 This module implements the evaluation engine for Sliip, a Lisp interpreter.
 It provides functionality to:
