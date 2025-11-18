@@ -23,6 +23,24 @@
 
       perSystem =
         { pkgs, lib, ... }:
+        let
+          sliip = pkgs.haskellPackages.developPackage {
+            root = ./.;
+            modifier =
+              drv:
+              pkgs.haskell.lib.addBuildTools drv ([
+                # Build tools
+                pkgs.haskellPackages.stack
+
+                # Linter
+                pkgs.haskellPackages.hlint
+
+                # LSP
+                pkgs.haskellPackages.haskell-language-server
+                pkgs.nil
+              ]);
+          };
+        in
         {
           treefmt = {
             projectRootFile = ".git/config";
@@ -52,22 +70,12 @@
             programs.shfmt.enable = true;
           };
 
-          devShells.default = pkgs.haskellPackages.developPackage {
-            root = ./.;
-            modifier =
-              drv:
-              pkgs.haskell.lib.addBuildTools drv ([
-                # Build tools
-                pkgs.haskellPackages.stack
-
-                # Linter
-                pkgs.haskellPackages.hlint
-
-                # LSP
-                pkgs.haskellPackages.haskell-language-server
-                pkgs.nil
-              ]);
+          packages = {
+            inherit sliip;
+            default = sliip;
           };
+
+          devShells.default = sliip;
         };
     };
 }
