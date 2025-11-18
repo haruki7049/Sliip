@@ -62,10 +62,11 @@ evalPrograms p = do
     Right exe -> runExecutable exe
 
 buildEnv :: Programs -> Environment
-buildEnv = foldl insertDef empty
+buildEnv progs = env
   where
-    insertDef env (EDefine name expr) = insert name (VThunk expr env) env
-    insertDef env _ = env
+    env = foldl insertDef empty progs
+    insertDef envAcc (EDefine name expr) = insert name (VThunk expr env) envAcc
+    insertDef envAcc _ = envAcc
 
 lookupVar :: String -> Environment -> Either EvaluationError Value
 lookupVar name env =
