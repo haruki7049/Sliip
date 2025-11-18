@@ -72,26 +72,26 @@ data Expr
   | EDefType String [String] [Ctor]
   | EMatch Expr [(Pattern, [Expr])]
   | EApp Expr [Expr]
-  deriving (Show)
+  deriving (Show, Eq)
 
 data Param = Param String (Maybe TypeExpr)
-  deriving (Show)
+  deriving (Show, Eq)
 
 data TypeExpr
   = TName String
   | TApp String [TypeExpr]
   | TArrow [TypeExpr] -- (-> a b c)
-  deriving (Show)
+  deriving (Show, Eq)
 
 data Ctor = Ctor String [TypeExpr]
-  deriving (Show)
+  deriving (Show, Eq)
 
 data Pattern
   = PVar String
   | PWildcard
   | PUnit
   | PCtor String [Pattern]
-  deriving (Show)
+  deriving (Show, Eq)
 
 type Programs = [Expr]
 

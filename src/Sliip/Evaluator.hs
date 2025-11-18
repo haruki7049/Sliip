@@ -4,155 +4,139 @@ import Control.Monad (forM_)
 import Data.List (find)
 import Data.Map (Map, empty, insert, lookup)
 import Sliip.Evaluator.Utils (isDefine, isMain)
-import Sliip.Parser (Atom (Builtin, Reference, SExprV, StringLiteral), Programs, SExpression (SExpr), parse)
+import Sliip.Parser (Expr (..), Param (..), Programs, parse)
 import Text.Parsec.Error (ParseError)
 import Prelude hiding (lookup)
 
--- | Executable which contains list of 'Statement'
---
--- Used in 'eval' function
 type Executable = [Statement]
 
--- | Statement is a Execution units in Sliip.
-newtype Statement
-  = -- | Display the String to stdout.
-    WriteLine String
+newtype Statement = WriteLine String
   deriving (Show, Eq)
 
--- | EvaluationError is the errors used in Sliip interpreter.
---
--- These are used as runtime errors
 data EvaluationError
   = NoMainFound
-  | InvalidForm SExpression
-  | InvalidAtom Atom
-  | UnknownBuitin String
+  | InvalidForm Expr
+  | InvalidExpr Expr
+  | UnknownBuiltin String
   | UnknownReference String
+  | TypeMismatch String
   deriving (Show, Eq)
 
--- | Value is data defined the types for Sliip language.
---
--- These are used as primitive types
 data Value
   = VString String
-  | VLambda [String] SExpression Environment
+  | VNumber Integer
+  | VFloat Double
+  | VBool Bool
+  | VLambda [String] [Expr] Environment
   | VBuiltin String (Value -> Either EvaluationError Value)
-  | VThunk Atom Environment
+  | VThunk Expr Environment
 
 instance Show Value where
   show (VString s) = "VString " ++ show s
-  show (VLambda args sexpr env) = "VLambda " ++ show args ++ show sexpr ++ show env
+  show (VNumber n) = "VNumber " ++ show n
+  show (VFloat d) = "VFloat " ++ show d
+  show (VBool b) = "VBool " ++ show b
+  show (VLambda args _ _) = "VLambda " ++ show args ++ " <body> <env>"
   show (VBuiltin name _) = "VBuiltin " ++ show name
-  show (VThunk atom _) = "VThunk " ++ show atom
+  show (VThunk _ _) = "VThunk <expr> <env>"
 
--- | Contains bind name and Value sets.
 type Environment = Map String Value
 
--- | Evaluates Sliip scripts.
---
--- >>> eval "(define main (lambda () (write-line \"hoge\")))"
--- hoge
 eval :: String -> IO ()
 eval script = do
   let parsed_result :: Either ParseError Programs
       parsed_result = parse script
-
   case parsed_result of
     Left err -> print err
     Right x -> evalPrograms x
 
--- | Evaluates Programs, the parsed results.
 evalPrograms :: Programs -> IO ()
 evalPrograms p = do
-  let mainSExpr :: Maybe SExpression
-      mainSExpr = getMain p
-
-      env :: Environment
+  let mainExpr = getMain p
       env = buildEnv p
-
-      executable :: Either EvaluationError Executable
-      executable = case mainSExpr of
+      executable = case mainExpr of
         Nothing -> Left NoMainFound
-        Just sexpr -> evalMain env sexpr
-
+        Just expr -> evalMain env expr
   case executable of
     Left err -> print err
     Right exe -> runExecutable exe
 
--- | Registers all defines' values to Environment, and return the Environment
 buildEnv :: Programs -> Environment
 buildEnv = foldl insertDef empty
   where
-    insertDef :: Environment -> SExpression -> Environment
-    insertDef env (SExpr [Builtin "define", Reference name, expr]) =
-      insert name (VThunk expr env) env
+    insertDef env (EDefine name expr) = insert name (VThunk expr env) env
     insertDef env _ = env
 
--- | lookupVar searches for an Value from String, by Environment
 lookupVar :: String -> Environment -> Either EvaluationError Value
 lookupVar name env =
   case lookup name env of
-    Just (VThunk sexpr closureEnv) -> do
-      val <- evalValue closureEnv sexpr
-      Right val
+    Just (VThunk expr closureEnv) -> evalExpr closureEnv expr
     Just v -> Right v
     Nothing -> Left (UnknownReference name)
 
-evalMain :: Environment -> SExpression -> Either EvaluationError Executable
-evalMain env (SExpr [Builtin "define", Builtin "main", SExprV sexpr]) = evalSExpr env sexpr
-evalMain _ sexpr = Left (InvalidForm sexpr)
+evalMain :: Environment -> Expr -> Either EvaluationError Executable
+evalMain env (EDefine "main" body) = 
+  case body of
+    ELambda params bodyExprs -> do
+      let paramNames = map (\(Param name _) -> name) params
+      evalLambdaBody env paramNames bodyExprs
+    _ -> do
+      val <- evalExpr env body
+      case val of
+        VLambda params bodyExprs closureEnv -> 
+          evalLambdaBody closureEnv params bodyExprs
+        _ -> Left (InvalidForm (EDefine "main" body))
+evalMain _ expr = Left (InvalidForm expr)
 
-evalSExpr :: Environment -> SExpression -> Either EvaluationError Executable
-evalSExpr env (SExpr [Builtin "lambda", SExprV args, SExprV body]) =
-  case buildLambda args body env of
-    Right (VLambda a b e) -> evalLambda e a b
-    Left err -> Left err
-evalSExpr env (SExpr (fnExpr : argExprs)) =
-  do
-    fnVal <- evalValue env fnExpr
-    argVals <- mapM (evalValue env) argExprs
-    apply fnVal argVals
-evalSExpr _ sexpr = Left (InvalidForm sexpr)
+evalExpr :: Environment -> Expr -> Either EvaluationError Value
+evalExpr _ (ENumber n) = Right (VNumber n)
+evalExpr _ (EFloat d) = Right (VFloat d)
+evalExpr _ (EString s) = Right (VString s)
+evalExpr _ (EBool b) = Right (VBool b)
+evalExpr env (ESymbol name) = lookupVar name env
+evalExpr env (ELambda params body) = do
+  let paramNames = map (\(Param name _) -> name) params
+  Right (VLambda paramNames body env)
+evalExpr env (EAscription expr _) = evalExpr env expr
+evalExpr env (EApp func args) = do
+  funcVal <- evalExpr env func
+  argVals <- mapM (evalExpr env) args
+  applyFunc funcVal argVals
+evalExpr _ expr = Left (InvalidExpr expr)
 
-buildLambda :: SExpression -> SExpression -> Environment -> Either EvaluationError Value
-buildLambda (SExpr args) body env =
-  let argNames = [name | Reference name <- args]
-   in Right (VLambda argNames body env)
-
-evalValue :: Environment -> Atom -> Either EvaluationError Value
-evalValue _ (StringLiteral s) = Right (VString s)
-evalValue env (Reference ref) = lookupVar ref env
-evalValue env (SExprV (SExpr [Builtin "lambda", SExprV args, SExprV body])) =
-  buildLambda args body env
-evalValue _ atom = Left (InvalidAtom atom)
-
-evalLambda :: Environment -> [String] -> SExpression -> Either EvaluationError Executable
-evalLambda _ _ (SExpr [Builtin "write-line", StringLiteral stringLiteral]) = Right [WriteLine stringLiteral]
-evalLambda env _ (SExpr [Builtin "write-line", Reference ref]) =
-  case lookupVar ref env of
-    Right (VString s) -> Right [WriteLine s]
-    Right _ -> Left (InvalidForm (SExpr [Builtin "write-line", Reference ref]))
-    Left err -> Left err
-evalLambda _ _ (SExpr []) = Right []
-evalLambda _ _ sexpr = Left (InvalidForm sexpr)
-
--- Apply lambda
-apply :: Value -> [Value] -> Either EvaluationError Executable
-apply (VLambda params body closureEnv) args
-  | length params == length args =
+applyFunc :: Value -> [Value] -> Either EvaluationError Value
+applyFunc (VLambda params body closureEnv) args
+  | length params == length args = do
       let localEnv = foldl (\e (p, a) -> insert p a e) closureEnv (zip params args)
-       in evalLambda localEnv params body
-  | otherwise = Left (InvalidForm body)
+      case body of
+        [expr] -> evalExpr localEnv expr
+        _ -> Left (InvalidExpr (EBegin body))
+  | otherwise = Left (TypeMismatch "Wrong number of arguments")
+applyFunc (VBuiltin _ f) [arg] = f arg
+applyFunc _ _ = Left (TypeMismatch "Cannot apply non-function")
 
-getMain :: Programs -> Maybe SExpression
+evalLambdaBody :: Environment -> [String] -> [Expr] -> Either EvaluationError Executable
+evalLambdaBody env _ body = evalExprsToExecutable env body
+
+evalExprsToExecutable :: Environment -> [Expr] -> Either EvaluationError Executable
+evalExprsToExecutable env exprs = do
+  results <- mapM (evalExprToStatement env) exprs
+  return (concat results)
+
+evalExprToStatement :: Environment -> Expr -> Either EvaluationError Executable
+evalExprToStatement env (EApp (ESymbol "write-line") [arg]) = do
+  val <- evalExpr env arg
+  case val of
+    VString s -> Right [WriteLine s]
+    _ -> Left (TypeMismatch "write-line expects string")
+evalExprToStatement env (EBegin exprs) = evalExprsToExecutable env exprs
+evalExprToStatement _ _ = Right []
+
+getMain :: Programs -> Maybe Expr
 getMain = find (\expr -> isDefine expr && isMain expr)
 
--- Run Executable
-
 runExecutable :: Executable -> IO ()
-runExecutable exe = do
-  forM_ exe $ \statement -> do
-    runStatement statement
+runExecutable exe = forM_ exe runStatement
 
 runStatement :: Statement -> IO ()
 runStatement (WriteLine str) = putStrLn str
