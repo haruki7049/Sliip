@@ -42,7 +42,7 @@ spec = do
       out `shouldBe` "hello\n"
 
     it "can defines lambda and string in script" $ do
-      program <- readFile "test/data/displayHoge.lisp"
+      program <- readFile "test/data/display-hoge.sliip"
       out <- capture_ (eval program)
       out `shouldBe` "hoge\n"
 
