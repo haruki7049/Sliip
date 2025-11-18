@@ -1,4 +1,3 @@
-{-# LANGUAGE FlexibleContexts #-}
 -- Simple Parsec-based parser for Sliip (example)
 -- Build: ghc --make parser/Parser.hs -o parser/parser
 -- Run: ./parser/parser example.sliip
