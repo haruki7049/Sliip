@@ -116,7 +116,7 @@ applyFunc (VBuiltin _ f) [arg] = f arg
 applyFunc _ _ = Left (TypeMismatch "Cannot apply non-function")
 
 evalLambdaBody :: Environment -> [String] -> [Expr] -> Either EvaluationError Executable
-evalLambdaBody env _ body = evalExprsToExecutable env body
+evalLambdaBody env _ = evalExprsToExecutable env
 
 evalExprsToExecutable :: Environment -> [Expr] -> Either EvaluationError Executable
 evalExprsToExecutable env exprs = do
