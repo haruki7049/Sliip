@@ -164,12 +164,11 @@ parseType = P.try parseArrow P.<|> parseTypeAtom
 
 parseTypeAtom :: Parser TypeExpr
 parseTypeAtom =
-  parens $
-    do
-      name <- identifier
-      args <- P.many parseType
-      return $ TApp name args
-      P.<|> (TName <$> identifier)
+  (parens $ do
+     name <- identifier
+     args <- P.many parseType
+     return $ TApp name args)
+    P.<|> (TName <$> identifier)
 
 parseArrow :: Parser TypeExpr
 parseArrow = parens $ do
