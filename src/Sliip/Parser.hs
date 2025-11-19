@@ -32,7 +32,6 @@ module Sliip.Parser
 where
 
 import Data.Void (Void)
-import qualified Text.Megaparsec as TM (parse)
 import Text.Megaparsec
   ( ParseErrorBundle,
     Parsec,
@@ -47,6 +46,7 @@ import Text.Megaparsec
     try,
     (<|>),
   )
+import qualified Text.Megaparsec as TM (parse)
 import qualified Text.Megaparsec.Char as C
 import qualified Text.Megaparsec.Char.Lexer as L
 
@@ -181,11 +181,14 @@ whiteSpace' = sc
 
 -- | Parse an identifier.
 identifier' :: Parser String
-identifier' = lexeme (try $ do
-  name <- (:) <$> identStart <*> many identLetter
-  if name `elem` reservedWords
-    then fail $ "keyword " ++ name ++ " cannot be an identifier"
-    else return name)
+identifier' =
+  lexeme
+    ( try $ do
+        name <- (:) <$> identStart <*> many identLetter
+        if name `elem` reservedWords
+          then fail $ "keyword " ++ name ++ " cannot be an identifier"
+          else return name
+    )
   where
     identStart = C.letterChar <|> oneOf "+-*/<>=!?_"
     identLetter = C.alphaNumChar <|> oneOf "+-*/<>=!?_-'"
