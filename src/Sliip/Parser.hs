@@ -19,7 +19,7 @@
 -- The parser produces an abstract syntax tree (AST) represented by the 'Expr' type.
 module Sliip.Parser
   ( -- * Parser API
-    parse,
+    parseSliip,
     Programs,
 
     -- * AST Types
@@ -31,44 +31,24 @@ module Sliip.Parser
   )
 where
 
-import Text.Parsec
-  ( ParseError,
-    alphaNum,
-    char,
+import Data.Void (Void)
+import Text.Megaparsec
+  ( ParseErrorBundle,
+    Parsec,
     eof,
-    letter,
     lookAhead,
     many,
-    many1,
+    manyTill,
+    notFollowedBy,
     oneOf,
-    optionMaybe,
-    string,
+    optional,
+    parse,
+    some,
     try,
     (<|>),
   )
-import qualified Text.Parsec as TP (parse)
-import Text.Parsec.Language (emptyDef)
-import Text.Parsec.String (Parser)
-import Text.Parsec.Token
-  ( LanguageDef,
-    TokenParser,
-    commentEnd,
-    commentLine,
-    commentStart,
-    identLetter,
-    identStart,
-    identifier,
-    makeTokenParser,
-    naturalOrFloat,
-    nestedComments,
-    parens,
-    reserved,
-    reservedNames,
-    reservedOp,
-    stringLiteral,
-    symbol,
-    whiteSpace,
-  )
+import qualified Text.Megaparsec.Char as C
+import qualified Text.Megaparsec.Char.Lexer as L
 
 -- Extended AST --------------------------------------------------------------
 
@@ -151,76 +131,85 @@ type Programs = [Expr]
 
 -- Lexer ---------------------------------------------------------------------
 
--- | Language definition for the Sliip lexer.
---
--- Defines:
---
--- * Comment syntax (line comments with @;@ and block comments with @#|...|#@)
--- * Valid identifier characters
--- * Reserved keywords
-languageDef :: LanguageDef ()
-languageDef =
-  emptyDef
-    { commentLine = ";",
-      commentStart = "#|",
-      commentEnd = "|#",
-      nestedComments = True,
-      identStart = letter <|> oneOf "+-*/<>=!?_",
-      identLetter = alphaNum <|> oneOf "+-*/<>=!?_-'",
-      reservedNames =
-        [ "define",
-          "lambda",
-          "let",
-          "let*",
-          "letrec",
-          "if",
-          "begin",
-          "quote",
-          "def-type",
-          "match",
-          "as",
-          "true",
-          "false",
-          "Nil",
-          "Cons"
-        ]
-    }
+-- | Parser type for Sliip.
+type Parser = Parsec Void String
 
--- | Token parser built from the language definition.
-lexer :: TokenParser ()
-lexer = makeTokenParser languageDef
+-- | Reserved keywords that cannot be used as identifiers.
+reservedWords :: [String]
+reservedWords =
+  [ "define",
+    "lambda",
+    "let",
+    "let*",
+    "letrec",
+    "if",
+    "begin",
+    "quote",
+    "def-type",
+    "match",
+    "as",
+    "true",
+    "false",
+    "Nil",
+    "Cons"
+  ]
+
+-- | Parse whitespace and comments.
+sc :: Parser ()
+sc = L.space C.space1 lineComment blockComment
+  where
+    lineComment = L.skipLineComment ";"
+    blockComment = L.skipBlockCommentNested "#|" "|#"
+
+-- | Lexeme parser: parse something and skip trailing whitespace.
+lexeme :: Parser a -> Parser a
+lexeme = L.lexeme sc
+
+-- | Parse a specific string (symbol) and skip trailing whitespace.
+symbol' :: String -> Parser String
+symbol' = L.symbol sc
 
 -- | Parse something enclosed in parentheses.
 parens' :: Parser a -> Parser a
-parens' = parens lexer
-
--- | Parse an identifier.
-identifier' :: Parser String
-identifier' = identifier lexer
-
--- | Parse a reserved keyword.
-reserved' :: String -> Parser ()
-reserved' = reserved lexer
-
--- | Parse a reserved operator.
-reservedOp' :: String -> Parser ()
-reservedOp' = reservedOp lexer
-
--- | Parse a string literal.
-stringLiteral' :: Parser String
-stringLiteral' = stringLiteral lexer
-
--- | Parse a number (integer or float).
-naturalOrFloat' :: Parser (Either Integer Double)
-naturalOrFloat' = naturalOrFloat lexer
+parens' = between (symbol' "(") (symbol' ")")
+  where
+    between open close p = open *> p <* close
 
 -- | Parse whitespace and comments.
 whiteSpace' :: Parser ()
-whiteSpace' = whiteSpace lexer
+whiteSpace' = sc
 
--- | Parse a specific symbol.
-symbol' :: String -> Parser String
-symbol' = symbol lexer
+-- | Parse an identifier.
+identifier' :: Parser String
+identifier' = lexeme (try $ do
+  name <- (:) <$> identStart <*> many identLetter
+  if name `elem` reservedWords
+    then fail $ "keyword " ++ name ++ " cannot be an identifier"
+    else return name)
+  where
+    identStart = C.letterChar <|> oneOf "+-*/<>=!?_"
+    identLetter = C.alphaNumChar <|> oneOf "+-*/<>=!?_-'"
+
+-- | Parse a reserved keyword.
+reserved' :: String -> Parser ()
+reserved' w = lexeme $ try $ do
+  _ <- C.string w
+  notFollowedBy (C.alphaNumChar <|> oneOf "+-*/<>=!?_-'")
+
+-- | Parse a reserved operator.
+reservedOp' :: String -> Parser ()
+reservedOp' = reserved'
+
+-- | Parse a string literal.
+stringLiteral' :: Parser String
+stringLiteral' = lexeme $ C.char '"' >> manyTill L.charLiteral (C.char '"')
+
+-- | Parse a number (integer or float).
+naturalOrFloat' :: Parser (Either Integer Double)
+naturalOrFloat' = lexeme $ try float <|> integer
+  where
+    integer = Left <$> L.decimal
+    float = Right <$> L.float
 
 -- Basic parsers --------------------------------------------------------------
 
@@ -269,7 +258,7 @@ parseTypeAtom =
 parseArrow :: Parser TypeExpr
 parseArrow = parens' $ do
   _ <- symbol' "->"
-  ts <- many1 parseType
+  ts <- some parseType
   return $ TArrow ts
 
 -- Pattern parser ------------------------------------------------------------
@@ -291,7 +280,7 @@ parsePattern =
           pats <- many parsePattern
           return $ PCtor name pats
       )
-    <|> try (string "()" >> return PUnit)
+    <|> try (C.string "()" >> return PUnit)
     <|> (PVar <$> identifier')
 
 -- Constructors (def-type) --------------------------------------------------
@@ -326,7 +315,7 @@ parseLambda :: Parser Expr
 parseLambda = do
   reserved' "lambda"
   params <- parens' (many parseParam)
-  body <- many1 parseExpr
+  body <- some parseExpr
   return $ ELambda params body
 
 -- | Parse a lambda parameter, optionally with a type annotation.
@@ -349,7 +338,7 @@ parseLetLike :: String -> Parser Expr
 parseLetLike kw = do
   reserved' kw
   binds <- parens' (many parseBinding)
-  body <- many1 parseExpr
+  body <- some parseExpr
   case kw of
     "let" -> return $ ELet binds body
     "let*" -> return $ ELetStar binds body
@@ -390,7 +379,7 @@ parseIf = do
 parseBegin :: Parser Expr
 parseBegin = do
   reserved' "begin"
-  es <- many1 parseExpr
+  es <- some parseExpr
   return $ EBegin es
 
 -- | Parse a quote expression: @(quote expr)@.
@@ -407,7 +396,7 @@ parseDefType = do
   reserved' "def-type"
   name <- identifier'
   params <- parens' (many identifier')
-  ctors <- many1 parseCtor
+  ctors <- some parseCtor
   return $ EDefType name params ctors
 
 -- | Parse a pattern matching expression: @(match expr (pattern body...)...)@.
@@ -416,10 +405,10 @@ parseMatch = do
   reserved' "match"
   expr <- parseExpr
   clauses <-
-    many1
+    some
       ( parens' $ do
           pat <- parsePattern
-          body <- many1 parseExpr
+          body <- some parseExpr
           return (pat, body)
       )
   return $ EMatch expr clauses
@@ -433,7 +422,7 @@ parseMatch = do
 parseApplicationOrSpecial :: Parser Expr
 parseApplicationOrSpecial = parens' $ do
   whiteSpace'
-  look <- optionMaybe (lookAhead (many1 (letter <|> oneOf "+-*/<>=!?_-'")))
+  look <- optional (lookAhead (some (C.letterChar <|> oneOf "+-*/<>=!?_-'")))
   case look of
     Just "define" -> parseDefine
     Just "lambda" -> parseLambda
@@ -461,7 +450,7 @@ parseAtom =
   try parseNumber
     <|> try parseString
     <|> try parseBool
-    <|> try (parens' (do _ <- char '\''; EQuote <$> parseExpr)) -- '( ...) rare
+    <|> try (parens' (do _ <- C.char '\''; EQuote <$> parseExpr)) -- '( ...) rare
     <|> parseSymbol
 
 -- | Parse any expression.
@@ -487,5 +476,5 @@ parseProgram = whiteSpace' *> many parseExpr <* eof
 -- | Parse a Sliip program from a string.
 --
 -- Returns either a parse error or the parsed program (list of expressions).
-parse :: String -> Either ParseError Programs
-parse = TP.parse parseProgram ""
+parseSliip :: String -> Either (ParseErrorBundle String Void) Programs
+parseSliip = parse parseProgram ""

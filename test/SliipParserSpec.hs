@@ -3,15 +3,15 @@
 module SliipParserSpec (spec) where
 
 import Data.List (null)
-import Sliip.Parser (Expr (..), Param (..), parse)
+import Sliip.Parser (Expr (..), Param (..), parseSliip)
 import Test.Hspec (Spec, describe, it, shouldSatisfy)
 
 spec :: Spec
 spec = do
-  describe "parse" $ do
+  describe "parseSliip" $ do
     it "parses a simple symbol" $ do
       let input = "hoge"
-          result = parse input
+          result = parseSliip input
       result
         `shouldSatisfy` ( \case
                             Left _ -> False
@@ -20,7 +20,7 @@ spec = do
 
     it "parses a simple application" $ do
       let input = "(hoge fuga)"
-          result = parse input
+          result = parseSliip input
       result
         `shouldSatisfy` ( \case
                             Left _ -> False
@@ -29,7 +29,7 @@ spec = do
 
     it "parses nested application" $ do
       let input = "(hoge (fuga piyo))"
-          result = parse input
+          result = parseSliip input
       result
         `shouldSatisfy` ( \case
                             Left _ -> False
@@ -38,7 +38,7 @@ spec = do
 
     it "ignores a comment line" $ do
       let input = "; hogehoge"
-          result = parse input
+          result = parseSliip input
       result
         `shouldSatisfy` ( \case
                             Left _ -> False
@@ -47,7 +47,7 @@ spec = do
 
     it "parses an expr with comment lines" $ do
       let input = "; hogehoge\nhoge\n; fuga"
-          result = parse input
+          result = parseSliip input
       result
         `shouldSatisfy` ( \case
                             Left _ -> False
@@ -56,7 +56,7 @@ spec = do
 
     it "parses symbols containing slash" $ do
       let input = "hoge/hoge"
-          result = parse input
+          result = parseSliip input
       result
         `shouldSatisfy` ( \case
                             Left _ -> False
@@ -65,7 +65,7 @@ spec = do
 
     it "parses symbols containing plus" $ do
       let input = "hoge+hoge"
-          result = parse input
+          result = parseSliip input
       result
         `shouldSatisfy` ( \case
                             Left _ -> False
@@ -74,7 +74,7 @@ spec = do
 
     it "parses string literals" $ do
       let input = "\"hoge\""
-          result = parse input
+          result = parseSliip input
       result
         `shouldSatisfy` ( \case
                             Left _ -> False
@@ -83,7 +83,7 @@ spec = do
 
     it "parses string literals with escape sequences" $ do
       let input = "\"hoge\\thoge\""
-          result = parse input
+          result = parseSliip input
       result
         `shouldSatisfy` ( \case
                             Left _ -> False
@@ -92,7 +92,7 @@ spec = do
 
     it "parses multiple expressions" $ do
       let input = "hoge\nfuga"
-          result = parse input
+          result = parseSliip input
       result
         `shouldSatisfy` ( \case
                             Left _ -> False
@@ -101,7 +101,7 @@ spec = do
 
     it "parses define with lambda" $ do
       let input = "(define main (lambda () (write-line \"test\")))"
-          result = parse input
+          result = parseSliip input
       result
         `shouldSatisfy` ( \case
                             Left _ -> False
@@ -112,7 +112,7 @@ spec = do
 
     it "parses numbers" $ do
       let input = "42"
-          result = parse input
+          result = parseSliip input
       result
         `shouldSatisfy` ( \case
                             Left _ -> False
@@ -121,7 +121,7 @@ spec = do
 
     it "parses booleans" $ do
       let input = "true false"
-          result = parse input
+          result = parseSliip input
       result
         `shouldSatisfy` ( \case
                             Left _ -> False
@@ -130,7 +130,7 @@ spec = do
 
     it "parses type ascriptions" $ do
       let input = "(as 42 Int)"
-          result = parse input
+          result = parseSliip input
       result
         `shouldSatisfy` ( \case
                             Left _ -> False
@@ -140,7 +140,7 @@ spec = do
 
     it "parses lambda with typed parameters" $ do
       let input = "(lambda ((x Int) (y String)) x)"
-          result = parse input
+          result = parseSliip input
       result
         `shouldSatisfy` ( \case
                             Left _ -> False
@@ -150,7 +150,7 @@ spec = do
 
     it "parses floating point numbers" $ do
       let input = "3.14"
-          result = parse input
+          result = parseSliip input
       result
         `shouldSatisfy` ( \case
                             Left _ -> False
@@ -159,7 +159,7 @@ spec = do
 
     it "parses if expressions" $ do
       let input = "(if true 1 0)"
-          result = parse input
+          result = parseSliip input
       result
         `shouldSatisfy` ( \case
                             Left _ -> False
@@ -169,7 +169,7 @@ spec = do
 
     it "parses begin expressions" $ do
       let input = "(begin (write-line \"a\") (write-line \"b\"))"
-          result = parse input
+          result = parseSliip input
       result
         `shouldSatisfy` ( \case
                             Left _ -> False
@@ -179,7 +179,7 @@ spec = do
 
     it "parses let expressions" $ do
       let input = "(let ((x 1) (y 2)) (+ x y))"
-          result = parse input
+          result = parseSliip input
       result
         `shouldSatisfy` ( \case
                             Left _ -> False
@@ -189,7 +189,7 @@ spec = do
 
     it "parses let* expressions" $ do
       let input = "(let* ((x 1) (y x)) y)"
-          result = parse input
+          result = parseSliip input
       result
         `shouldSatisfy` ( \case
                             Left _ -> False
@@ -199,7 +199,7 @@ spec = do
 
     it "parses letrec expressions" $ do
       let input = "(letrec ((f (lambda (x) (f x)))) (f 1))"
-          result = parse input
+          result = parseSliip input
       result
         `shouldSatisfy` ( \case
                             Left _ -> False
@@ -209,7 +209,7 @@ spec = do
 
     it "parses quote expressions" $ do
       let input = "(quote (a b c))"
-          result = parse input
+          result = parseSliip input
       result
         `shouldSatisfy` ( \case
                             Left _ -> False
@@ -219,7 +219,7 @@ spec = do
 
     it "parses def-type expressions" $ do
       let input = "(def-type Maybe (T) (Just T) (Nothing))"
-          result = parse input
+          result = parseSliip input
       result
         `shouldSatisfy` ( \case
                             Left _ -> False
@@ -229,7 +229,7 @@ spec = do
 
     it "parses match expressions" $ do
       let input = "(match x ((Just y) y) (_ 0))"
-          result = parse input
+          result = parseSliip input
       result
         `shouldSatisfy` ( \case
                             Left _ -> False
@@ -239,7 +239,7 @@ spec = do
 
     it "parses nested let in lambda" $ do
       let input = "(lambda (x) (let ((y x)) (write-line y)))"
-          result = parse input
+          result = parseSliip input
       result
         `shouldSatisfy` ( \case
                             Left _ -> False
@@ -249,7 +249,7 @@ spec = do
 
     it "parses multiple defines" $ do
       let input = "(define x 1)\n(define y 2)\n(define z 3)"
-          result = parse input
+          result = parseSliip input
       result
         `shouldSatisfy` ( \case
                             Left _ -> False
@@ -258,7 +258,7 @@ spec = do
 
     it "parses complex type expressions" $ do
       let input = "(as f (-> Int String Bool))"
-          result = parse input
+          result = parseSliip input
       result
         `shouldSatisfy` ( \case
                             Left _ -> False
@@ -268,7 +268,7 @@ spec = do
 
     it "parses symbols with special characters" $ do
       let input = "<=>"
-          result = parse input
+          result = parseSliip input
       result
         `shouldSatisfy` ( \case
                             Left _ -> False
@@ -278,7 +278,7 @@ spec = do
 
     it "parses block comments" $ do
       let input = "#| block comment |# hoge"
-          result = parse input
+          result = parseSliip input
       result
         `shouldSatisfy` ( \case
                             Left _ -> False
@@ -287,7 +287,7 @@ spec = do
 
     it "parses nested block comments" $ do
       let input = "#| outer #| inner |# outer |# fuga"
-          result = parse input
+          result = parseSliip input
       result
         `shouldSatisfy` ( \case
                             Left _ -> False
