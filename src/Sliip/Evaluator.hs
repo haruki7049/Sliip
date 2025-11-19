@@ -22,7 +22,7 @@ import Data.List (find)
 import Data.Map (Map, empty, insert, lookup)
 import Sliip.Evaluator.Utils (isDefine, isMain)
 import Data.Void (Void)
-import Sliip.Parser (Expr (..), Param (..), Programs, parseSliip)
+import Sliip.Parser (Expr (..), Param (..), Programs, parse)
 import Text.Megaparsec (ParseErrorBundle)
 import Prelude hiding (lookup)
 
@@ -87,7 +87,7 @@ type Environment = Map String Value
 eval :: String -> IO ()
 eval script = do
   let parsed_result :: Either (ParseErrorBundle String Void) Programs
-      parsed_result = parseSliip script
+      parsed_result = parse script
   case parsed_result of
     Left err -> print err
     Right x -> evalPrograms x

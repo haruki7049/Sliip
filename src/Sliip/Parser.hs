@@ -19,7 +19,7 @@
 -- The parser produces an abstract syntax tree (AST) represented by the 'Expr' type.
 module Sliip.Parser
   ( -- * Parser API
-    parseSliip,
+    parse,
     Programs,
 
     -- * AST Types
@@ -32,6 +32,7 @@ module Sliip.Parser
 where
 
 import Data.Void (Void)
+import qualified Text.Megaparsec as TM (parse)
 import Text.Megaparsec
   ( ParseErrorBundle,
     Parsec,
@@ -42,7 +43,6 @@ import Text.Megaparsec
     notFollowedBy,
     oneOf,
     optional,
-    parse,
     some,
     try,
     (<|>),
@@ -476,5 +476,5 @@ parseProgram = whiteSpace' *> many parseExpr <* eof
 -- | Parse a Sliip program from a string.
 --
 -- Returns either a parse error or the parsed program (list of expressions).
-parseSliip :: String -> Either (ParseErrorBundle String Void) Programs
-parseSliip = parse parseProgram ""
+parse :: String -> Either (ParseErrorBundle String Void) Programs
+parse = TM.parse parseProgram ""
