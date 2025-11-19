@@ -20,9 +20,10 @@ module Sliip.Evaluator (eval) where
 import Control.Monad (forM_)
 import Data.List (find)
 import Data.Map (Map, empty, insert, lookup)
+import Data.Void (Void)
 import Sliip.Evaluator.Utils (isDefine, isMain)
 import Sliip.Parser (Expr (..), Param (..), Programs, parse)
-import Text.Parsec.Error (ParseError)
+import Text.Megaparsec (ParseErrorBundle)
 import Prelude hiding (lookup)
 
 -- | An executable program represented as a list of statements.
@@ -85,7 +86,7 @@ type Environment = Map String Value
 -- the resulting program.
 eval :: String -> IO ()
 eval script = do
-  let parsed_result :: Either ParseError Programs
+  let parsed_result :: Either (ParseErrorBundle String Void) Programs
       parsed_result = parse script
   case parsed_result of
     Left err -> print err
