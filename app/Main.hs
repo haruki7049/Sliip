@@ -11,7 +11,6 @@ module Main where
 
 import Options.Applicative (Parser, ParserInfo, execParser, help, helper, info, long, metavar, progDesc, short, strArgument, switch, (<**>))
 import Sliip.Evaluator (eval)
-import Text.Parsec (parse)
 
 -- | Main entry point for the Sliip interpreter.
 --
