@@ -47,8 +47,9 @@ import Text.Megaparsec
     (<|>),
   )
 import qualified Text.Megaparsec as TM (parse)
-import qualified Text.Megaparsec.Char as C
-import qualified Text.Megaparsec.Char.Lexer as L
+import Text.Megaparsec.Char (alphaNumChar, char, letterChar, space1, string)
+import Text.Megaparsec.Char.Lexer (charLiteral, decimal, skipBlockCommentNested, skipLineComment, space, symbol)
+import qualified Text.Megaparsec.Char.Lexer as L (float, lexeme)
 
 -- Extended AST --------------------------------------------------------------
 
@@ -156,10 +157,10 @@ reservedWords =
 
 -- | Parse whitespace and comments.
 sc :: Parser ()
-sc = L.space C.space1 lineComment blockComment
+sc = space space1 lineComment blockComment
   where
-    lineComment = L.skipLineComment ";"
-    blockComment = L.skipBlockCommentNested "#|" "|#"
+    lineComment = skipLineComment ";"
+    blockComment = skipBlockCommentNested "#|" "|#"
 
 -- | Lexeme parser: parse something and skip trailing whitespace.
 lexeme :: Parser a -> Parser a
@@ -167,7 +168,7 @@ lexeme = L.lexeme sc
 
 -- | Parse a specific string (symbol) and skip trailing whitespace.
 symbol' :: String -> Parser String
-symbol' = L.symbol sc
+symbol' = symbol sc
 
 -- | Parse something enclosed in parentheses.
 parens' :: Parser a -> Parser a
@@ -190,14 +191,14 @@ identifier' =
           else return name
     )
   where
-    identStart = C.letterChar <|> oneOf "+-*/<>=!?_"
-    identLetter = C.alphaNumChar <|> oneOf "+-*/<>=!?_-'"
+    identStart = letterChar <|> oneOf "+-*/<>=!?_"
+    identLetter = alphaNumChar <|> oneOf "+-*/<>=!?_-'"
 
 -- | Parse a reserved keyword.
 reserved' :: String -> Parser ()
 reserved' w = lexeme $ try $ do
-  _ <- C.string w
-  notFollowedBy (C.alphaNumChar <|> oneOf "+-*/<>=!?_-'")
+  _ <- string w
+  notFollowedBy (alphaNumChar <|> oneOf "+-*/<>=!?_-'")
 
 -- | Parse a reserved operator.
 reservedOp' :: String -> Parser ()
@@ -205,13 +206,13 @@ reservedOp' = reserved'
 
 -- | Parse a string literal.
 stringLiteral' :: Parser String
-stringLiteral' = lexeme $ C.char '"' >> manyTill L.charLiteral (C.char '"')
+stringLiteral' = lexeme $ char '"' >> manyTill charLiteral (char '"')
 
 -- | Parse a number (integer or float).
 naturalOrFloat' :: Parser (Either Integer Double)
 naturalOrFloat' = lexeme $ try float <|> integer
   where
-    integer = Left <$> L.decimal
+    integer = Left <$> decimal
     float = Right <$> L.float
 
 -- Basic parsers --------------------------------------------------------------
@@ -283,7 +284,7 @@ parsePattern =
           pats <- many parsePattern
           return $ PCtor name pats
       )
-    <|> try (C.string "()" >> return PUnit)
+    <|> try (string "()" >> return PUnit)
     <|> (PVar <$> identifier')
 
 -- Constructors (def-type) --------------------------------------------------
@@ -425,7 +426,7 @@ parseMatch = do
 parseApplicationOrSpecial :: Parser Expr
 parseApplicationOrSpecial = parens' $ do
   whiteSpace'
-  look <- optional (lookAhead (some (C.letterChar <|> oneOf "+-*/<>=!?_-'")))
+  look <- optional (lookAhead (some (letterChar <|> oneOf "+-*/<>=!?_-'")))
   case look of
     Just "define" -> parseDefine
     Just "lambda" -> parseLambda
@@ -453,7 +454,7 @@ parseAtom =
   try parseNumber
     <|> try parseString
     <|> try parseBool
-    <|> try (parens' (do _ <- C.char '\''; EQuote <$> parseExpr)) -- '( ...) rare
+    <|> try (parens' (do _ <- char '\''; EQuote <$> parseExpr)) -- '( ...) rare
     <|> parseSymbol
 
 -- | Parse any expression.
