@@ -9,7 +9,7 @@
 -- It handles argument parsing and invokes the evaluator on the specified Lisp source file.
 module Main where
 
-import Options.Applicative (Parser, ParserInfo, execParser, help, helper, info, long, metavar, progDesc, short, strArgument, switch, (<**>))
+import Options.Applicative (Parser, ParserInfo, execParser, helper, info, metavar, progDesc, strArgument, (<**>))
 import Sliip.Evaluator (eval)
 
 -- | Main entry point for the Sliip interpreter.

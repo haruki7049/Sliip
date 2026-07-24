@@ -2,8 +2,7 @@
 
 module SliipParserSpec (spec) where
 
-import Data.List (null)
-import Sliip.Parser (Expr (..), Param (..), parse)
+import Sliip.Parser (Expr (..), parse)
 import Test.Hspec (Spec, describe, it, shouldSatisfy)
 
 spec :: Spec
