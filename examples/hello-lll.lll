@@ -1,5 +1,5 @@
 (define s
-  (as "Hello, Sliip!" String))
+  (as "Hello, lll!" String))
 
 (define main
   (as

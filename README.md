@@ -1,4 +1,4 @@
-# Sliip
+# lll
 
 A joke Lisp interpreter by Haskell
 
