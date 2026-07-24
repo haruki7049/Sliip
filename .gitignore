@@ -20,7 +20,6 @@ cabal.sandbox.config
 *.keter
 *~
 \#*
-sliip.cabal
 
 # Nix
 .direnv/

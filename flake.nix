@@ -22,24 +22,26 @@
       ];
 
       perSystem =
-        { pkgs, lib, ... }:
+        {
+          config,
+          lib,
+          pkgs,
+          ...
+        }:
         let
           sliip = pkgs.haskellPackages.developPackage {
             root = ./.;
-            modifier =
-              drv:
-              pkgs.haskell.lib.addBuildTools drv ([
-                # Build tools
-                pkgs.haskellPackages.stack
-
-                # Linter
-                pkgs.haskellPackages.hlint
-
-                # LSP
-                pkgs.haskellPackages.haskell-language-server
-                pkgs.nil
-              ]);
+            modifier = drv: pkgs.haskell.lib.addBuildTools drv nativeBuildInputs;
           };
+
+          buildInputs = [ ];
+          nativeBuildInputs = [
+            pkgs.haskellPackages.cabal-install # Cabal build tool for Haskell
+            pkgs.haskellPackages.haskell-language-server # Haskell LSP
+            pkgs.nil # Nix LSP
+
+            config.treefmt.build.wrapper # Treefmt CLI
+          ];
         in
         {
           treefmt = {
@@ -50,14 +52,8 @@
 
             # Haskell
             programs.ormolu.enable = true;
+            programs.cabal-gild.enable = true;
             programs.hlint.enable = true;
-
-            # Yaml
-            programs.yamlfmt.enable = true;
-            settings.formatter.yamlfmt.options = [
-              "-conf"
-              "./.yamlfmt.yml"
-            ];
 
             # GitHub Actions
             programs.actionlint.enable = true;
@@ -75,7 +71,13 @@
             default = sliip;
           };
 
-          devShells.default = sliip;
+          devShells.default = pkgs.haskellPackages.shellFor {
+            packages = hpkgs: [
+              (hpkgs.callCabal2nix "sliip" ./. { })
+            ];
+
+            inherit nativeBuildInputs buildInputs;
+          };
         };
     };
 }

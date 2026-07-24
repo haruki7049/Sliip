@@ -1,7 +1,0 @@
-snapshot: lts-23.28
-packages:
-  - .
-
-nix:
-  enable: true
-  shell-file: shell.nix
