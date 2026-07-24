@@ -1,0 +1,3 @@
+[alias]
+xtask = "run --package lll_xtask --" # cargo-xtask
+x = "run --package lll_xtask --"     # cargo-xtask

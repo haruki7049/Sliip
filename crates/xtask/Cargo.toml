@@ -1,0 +1,17 @@
+[package]
+name = "lll_xtask"
+description = "xtask crate for lll"
+authors.workspace = true
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+readme.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+clap.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+anyhow.workspace = true
