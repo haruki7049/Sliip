@@ -1,14 +1,17 @@
 {
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
-    systems.url = "github:nix-systems/default";
-    flake-compat.url = "github:edolstra/flake-compat";
+    crane.url = "github:ipetkov/crane";
     flake-parts = {
       url = "github:hercules-ci/flake-parts";
       inputs.nixpkgs-lib.follows = "nixpkgs";
     };
     treefmt-nix = {
       url = "github:numtide/treefmt-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    rust-overlay = {
+      url = "github:oxalica/rust-overlay";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
@@ -31,34 +34,88 @@
           config,
           lib,
           pkgs,
+          system,
           ...
         }:
         let
-          sliip = pkgs.haskellPackages.developPackage {
-            root = ./.;
-            modifier = drv: pkgs.haskell.lib.addBuildTools drv nativeBuildInputs;
-          };
+          rust = pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
+          craneLib = (inputs.crane.mkLib pkgs).overrideToolchain rust;
+          overlays = [ inputs.rust-overlay.overlays.default ];
+          src = lib.cleanSource ./.;
 
           buildInputs = [ ];
           nativeBuildInputs = [
-            pkgs.haskellPackages.cabal-install # Cabal build tool for Haskell
-            pkgs.haskellPackages.haskell-language-server # Haskell LSP
+            rust # Rust toolchain
             pkgs.nil # Nix LSP
-
-            config.treefmt.build.wrapper # Treefmt CLI
+            pkgs.cargo-llvm-cov
+            pkgs.nushell # Script runner
+            pkgs.cachix # cachix CLI
           ];
+          cargoArtifacts = craneLib.buildDepsOnly {
+            inherit src buildInputs nativeBuildInputs;
+          };
+          spacerobo = craneLib.buildPackage {
+            inherit
+              src
+              cargoArtifacts
+              buildInputs
+              nativeBuildInputs
+              ;
+
+            strictDeps = true;
+            doCheck = true;
+
+            meta = {
+              licenses = [ lib.licenses.mit ];
+              mainProgram = "sliip";
+            };
+          };
+          cargo-clippy = craneLib.cargoClippy {
+            inherit
+              src
+              cargoArtifacts
+              buildInputs
+              nativeBuildInputs
+              ;
+
+            cargoClippyExtraArgs = "--verbose -- --deny warnings";
+          };
+          cargo-doc = craneLib.cargoDoc {
+            inherit
+              src
+              cargoArtifacts
+              buildInputs
+              nativeBuildInputs
+              ;
+          };
+          llvm-cov = craneLib.cargoLlvmCov {
+            inherit
+              src
+              cargoArtifacts
+              buildInputs
+              nativeBuildInputs
+              ;
+
+            cargoLlvmCovExtraArgs = "test --html --output-dir $out";
+          };
         in
         {
+          _module.args.pkgs = import inputs.nixpkgs {
+            inherit system overlays;
+          };
+
           treefmt = {
-            projectRootFile = ".git/config";
+            projectRootFile = "flake.nix";
 
             # Nix
             programs.nixfmt.enable = true;
 
-            # Haskell
-            programs.ormolu.enable = true;
-            programs.cabal-gild.enable = true;
-            programs.hlint.enable = true;
+            # Rust
+            programs.rustfmt.enable = true;
+            settings.formatter.rustfmt.command = "${rust}/bin/rustfmt";
+
+            # TOML
+            programs.taplo.enable = true;
 
             # GitHub Actions
             programs.actionlint.enable = true;
@@ -72,16 +129,21 @@
           };
 
           packages = {
-            inherit sliip;
-            default = sliip;
+            inherit spacerobo llvm-cov;
+            default = spacerobo;
+            doc = cargo-doc;
           };
 
-          devShells.default = pkgs.haskellPackages.shellFor {
-            packages = hpkgs: [
-              (hpkgs.callCabal2nix "sliip" ./. { })
-            ];
+          checks = {
+            inherit cargo-clippy;
+          };
 
-            inherit nativeBuildInputs buildInputs;
+          devShells.default = pkgs.mkShell {
+            inherit buildInputs nativeBuildInputs;
+
+            inputsFrom = [
+              config.treefmt.build.devShell
+            ];
           };
         };
     };
