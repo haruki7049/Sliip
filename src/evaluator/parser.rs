@@ -27,14 +27,12 @@ mod tests {
     use chumsky::prelude::*;
 
     #[test]
-    fn number_parser_parses_number() -> anyhow::Result<()> {
+    fn number_parser_parses_number() {
         assert_eq!(parse_number().parse("1").into_result(), Ok(AST::Number(1)));
         assert_eq!(
             parse_number().parse("100000").into_result(),
             Ok(AST::Number(100000))
         );
         assert!(parse_number().parse("1.0").into_result().is_err());
-
-        Ok(())
     }
 }
