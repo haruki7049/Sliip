@@ -23,7 +23,6 @@ pub enum ParseError {}
 #[cfg(test)]
 mod tests {
     use crate::evaluator::parser::{parse_number, types::AST};
-    use chumsky::error::RichReason;
     use chumsky::prelude::*;
 
     #[test]
