@@ -322,4 +322,85 @@ mod tests {
 
         Ok(())
     }
+
+    #[test]
+    fn lll_variables() -> anyhow::Result<()> {
+        let common = include_str!("../../examples/variables.lll");
+        let actual = tokenize(common)?;
+        assert_eq!(
+            actual,
+            vec![
+                // (define firstName
+                //   (as "Alice" String))
+                Token::ParenOpen,
+                Token::Define,
+                Token::Ident(Rc::from("firstName")),
+                Token::ParenOpen,
+                Token::As,
+                Token::Str(Rc::from("Alice")),
+                Token::Ident(Rc::from("String")),
+                Token::ParenClose,
+                Token::ParenClose,
+                // (define lastName
+                //   (as "Wonderland" String))
+                Token::ParenOpen,
+                Token::Define,
+                Token::Ident(Rc::from("lastName")),
+                Token::ParenOpen,
+                Token::As,
+                Token::Str(Rc::from("Wonderland")),
+                Token::Ident(Rc::from("String")),
+                Token::ParenClose,
+                Token::ParenClose,
+                // (define greeting
+                //   (as "Hello from variables!" String))
+                Token::ParenOpen,
+                Token::Define,
+                Token::Ident(Rc::from("greeting")),
+                Token::ParenOpen,
+                Token::As,
+                Token::Str(Rc::from("Hello from variables!")),
+                Token::Ident(Rc::from("String")),
+                Token::ParenClose,
+                Token::ParenClose,
+                // (define main
+                //   (as
+                //     (lambda ()
+                //       (write-line greeting)
+                //       (write-line firstName)
+                //       (write-line lastName))
+                //     (-> Void)))
+                Token::ParenOpen,
+                Token::Define,
+                Token::Ident(Rc::from("main")),
+                Token::ParenOpen,
+                Token::As,
+                Token::ParenOpen,
+                Token::Lambda,
+                Token::ParenOpen,
+                Token::ParenClose,
+                Token::ParenOpen,
+                Token::Ident(Rc::from("write-line")),
+                Token::Ident(Rc::from("greeting")),
+                Token::ParenClose,
+                Token::ParenOpen,
+                Token::Ident(Rc::from("write-line")),
+                Token::Ident(Rc::from("firstName")),
+                Token::ParenClose,
+                Token::ParenOpen,
+                Token::Ident(Rc::from("write-line")),
+                Token::Ident(Rc::from("lastName")),
+                Token::ParenClose,
+                Token::ParenClose,
+                Token::ParenOpen,
+                Token::RightArrow,
+                Token::Ident(Rc::from("Void")),
+                Token::ParenClose,
+                Token::ParenClose,
+                Token::ParenClose
+            ]
+        );
+
+        Ok(())
+    }
 }
