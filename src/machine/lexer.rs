@@ -7,7 +7,7 @@ use thiserror::Error;
 
 #[derive(Logos, Debug, PartialEq, Clone)]
 #[logos(error = LexingError)]
-#[logos(skip r"\s+")]
+#[logos(skip r"[ \t\n\f]+")]
 #[logos(skip(r";[^\n]*", allow_greedy = true))]
 pub enum Token {
     /// Integer number
@@ -87,6 +87,13 @@ mod tests {
     use std::rc::Rc;
 
     use crate::machine::lexer::{Token, tokenize};
+
+    #[test]
+    fn sexp_invalid() -> anyhow::Result<()> {
+        let invalid = "(hoge foo \"NO_CLOSING_QUOTE";
+        let _actual = tokenize(invalid)?;
+        todo!()
+    }
 
     #[test]
     fn sexp_common() -> anyhow::Result<()> {
