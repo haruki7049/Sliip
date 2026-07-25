@@ -47,7 +47,7 @@ pub enum Token {
     As,
 
     /// Ident
-    #[regex(r"([[:alpha:]]|_)([[:alnum:]]|[\-\_]|_)*|`[^`\\\x00-\x1F\s]*`", |lex| Rc::from(lex.slice()))]
+    #[regex(r#"([[:alpha:]]|_)([[:alnum:]]|[\-\_]|_)*|`[^`\\\x00-\x1F\s]*`|\\(["\\bnfrt/]|u[a-fA-F0-9]{4})*"#, |lex| Rc::from(lex.slice()))]
     Ident(Rc<str>),
 }
 
@@ -115,6 +115,26 @@ mod tests {
         Ok(())
     }
 
+    /// No backslash before the quote
+    #[test]
+    fn only_quote() -> anyhow::Result<()> {
+        let only_quote = "\"";
+        let actual = tokenize(only_quote);
+        assert_eq!(actual, Err(LexingError::UnknownParseError));
+
+        Ok(())
+    }
+
+    /// A backslash before the quote
+    #[test]
+    fn backslash_and_quote() -> anyhow::Result<()> {
+        let backslash_and_quote = "\\\"";
+        let actual = tokenize(backslash_and_quote)?;
+        assert_eq!(actual, vec![Token::Ident(Rc::from("\""))]);
+
+        Ok(())
+    }
+
     #[test]
     fn integer() -> anyhow::Result<()> {
         let common = "1";
@@ -147,6 +167,24 @@ mod tests {
     }
 
     #[test]
+    fn empty_string() -> anyhow::Result<()> {
+        let program = "\"\"";
+        let actual = tokenize(program)?;
+        assert_eq!(actual, vec![Token::Str(Rc::from(""))]);
+
+        Ok(())
+    }
+
+    #[test]
+    fn some_string() -> anyhow::Result<()> {
+        let program = "\"SOME_STRING_DATA\"";
+        let actual = tokenize(program)?;
+        assert_eq!(actual, vec![Token::Str(Rc::from("SOME_STRING_DATA"))]);
+
+        Ok(())
+    }
+
+    #[test]
     fn sexp_common_multiline() -> anyhow::Result<()> {
         let common = "(hoge foo \"This is a string\")\n(this is the second line)";
         let actual = tokenize(common)?;
@@ -174,6 +212,15 @@ mod tests {
     #[test]
     fn sexp_comment_line() -> anyhow::Result<()> {
         let common = "; This is a comment line";
+        let actual = tokenize(common)?;
+        assert_eq!(actual, vec![]);
+
+        Ok(())
+    }
+
+    #[test]
+    fn sexp_comment_with_two_semicolomn() -> anyhow::Result<()> {
+        let common = ";; This is also a comment line";
         let actual = tokenize(common)?;
         assert_eq!(actual, vec![]);
 
