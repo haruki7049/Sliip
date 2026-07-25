@@ -1,5 +1,5 @@
 use itertools::Itertools;
-use logos::{Lexer, Logos};
+use logos::Logos;
 use std::rc::Rc;
 use thiserror::Error;
 
@@ -387,6 +387,100 @@ mod tests {
                 Token::ParenOpen,
                 Token::Ident(Rc::from("write-line")),
                 Token::Ident(Rc::from("lastName")),
+                Token::ParenClose,
+                Token::ParenClose,
+                Token::ParenOpen,
+                Token::RightArrow,
+                Token::Ident(Rc::from("Void")),
+                Token::ParenClose,
+                Token::ParenClose,
+                Token::ParenClose
+            ]
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn lll_type_annotations() -> anyhow::Result<()> {
+        let common = include_str!("../../examples/type-annotations.lll");
+        let actual = tokenize(common)?;
+        assert_eq!(
+            actual,
+            vec![
+                Token::ParenOpen,
+                Token::Define,
+                Token::Ident(Rc::from("typedString")),
+                Token::ParenOpen,
+                Token::As,
+                Token::Str(Rc::from("This is a typed string")),
+                Token::Ident(Rc::from("String")),
+                Token::ParenClose,
+                Token::ParenClose,
+                Token::ParenOpen,
+                Token::Define,
+                Token::Ident(Rc::from("typedNumber")),
+                Token::ParenOpen,
+                Token::As,
+                Token::Integer(42),
+                Token::Ident(Rc::from("Integer")),
+                Token::ParenClose,
+                Token::ParenClose,
+                Token::ParenOpen,
+                Token::Define,
+                Token::Ident(Rc::from("typedFloat")),
+                Token::ParenOpen,
+                Token::As,
+                Token::Float(3.14),
+                Token::Ident(Rc::from("Float")),
+                Token::ParenClose,
+                Token::ParenClose,
+                Token::ParenOpen,
+                Token::Define,
+                Token::Ident(Rc::from("typedBool")),
+                Token::ParenOpen,
+                Token::As,
+                Token::Ident(Rc::from("true")),
+                Token::Ident(Rc::from("Bool")),
+                Token::ParenClose,
+                Token::ParenClose,
+                Token::ParenOpen,
+                Token::Define,
+                Token::Ident(Rc::from("typedFunction")),
+                Token::ParenOpen,
+                Token::As,
+                Token::ParenOpen,
+                Token::Lambda,
+                Token::ParenOpen,
+                Token::ParenOpen,
+                Token::Ident(Rc::from("x")),
+                Token::Ident(Rc::from("String")),
+                Token::ParenClose,
+                Token::ParenClose,
+                Token::ParenOpen,
+                Token::Ident(Rc::from("write-line")),
+                Token::Ident(Rc::from("x")),
+                Token::ParenClose,
+                Token::ParenClose,
+                Token::ParenOpen,
+                Token::RightArrow,
+                Token::Ident(Rc::from("String")),
+                Token::Ident(Rc::from("Void")),
+                Token::ParenClose,
+                Token::ParenClose,
+                Token::ParenClose,
+                Token::ParenOpen,
+                Token::Define,
+                Token::Ident(Rc::from("main")),
+                Token::ParenOpen,
+                Token::As,
+                Token::ParenOpen,
+                Token::Lambda,
+                Token::ParenOpen,
+                Token::ParenClose,
+                Token::ParenOpen,
+                Token::Ident(Rc::from("typedFunction")),
+                Token::Ident(Rc::from("typedString")),
                 Token::ParenClose,
                 Token::ParenClose,
                 Token::ParenOpen,
