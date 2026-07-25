@@ -86,13 +86,15 @@ pub fn tokenize(src: &str) -> Result<Vec<Token>, LexingError> {
 mod tests {
     use std::rc::Rc;
 
-    use crate::machine::lexer::{Token, tokenize};
+    use crate::machine::lexer::{LexingError, Token, tokenize};
 
     #[test]
     fn sexp_invalid() -> anyhow::Result<()> {
         let invalid = "(hoge foo \"NO_CLOSING_QUOTE";
-        let _actual = tokenize(invalid)?;
-        todo!()
+        let actual = tokenize(invalid);
+
+        assert_eq!(actual, Err(LexingError::UnknownParseError));
+        Ok(())
     }
 
     #[test]
