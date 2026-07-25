@@ -7,6 +7,8 @@ use chumsky::prelude::*;
 use thiserror::Error;
 use types::*;
 
+use crate::evaluator::parser::constants::keywords;
+
 pub fn parse() -> Result<Programs, ParseError> {
     todo!()
 }
@@ -16,6 +18,21 @@ fn parse_number<'src>() -> impl Parser<'src, &'src str, AST, extra::Err<Rich<'sr
         .map(|s: &str| AST::Number(s.parse().unwrap()))
         .padded()
 }
+
+// fn keywords<'src>() -> impl Parser<'src, &'src str, AST, extra::Err<Rich<'src, char>>> {
+//     // choice((keywords::DEFINE,))
+//     todo!()
+// }
+
+// fn ast<'src>() -> impl Parser<'src, &'src str, AST, extra::Err<Rich<'src, char>>> {
+//     todo!()
+// }
+
+// fn define<'src>() -> impl Parser<'src, &'src str, AST, extra::Err<Rich<'src, char>>> {
+//     let define = just(keywords::DEFINE);
+//     let name = just(text::ident());
+//     let ast = just(ast);
+// }
 
 #[derive(Debug, Error)]
 pub enum ParseError {}
