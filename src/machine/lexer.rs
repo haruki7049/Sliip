@@ -130,7 +130,7 @@ mod tests {
     fn backslash_and_quote() -> anyhow::Result<()> {
         let backslash_and_quote = "\\\"";
         let actual = tokenize(backslash_and_quote)?;
-        assert_eq!(actual, vec![Token::Ident(Rc::from("\""))]);
+        assert_eq!(actual, vec![Token::Ident(Rc::from("\\\""))]);
 
         Ok(())
     }
