@@ -1,3 +1,5 @@
+//! # lll lexer
+
 use itertools::Itertools;
 use logos::Logos;
 use std::rc::Rc;
