@@ -71,15 +71,15 @@ pub enum LexingError {
     #[error("Integer parse error")]
     IntegerParseError,
 
-    #[error("TODO")]
+    #[error("Unknown parse error")]
     #[default]
-    Todo,
+    UnknownParseError,
 }
 
 pub fn tokenize(src: &str) -> Result<Vec<Token>, LexingError> {
     Token::lexer(src)
         .try_collect()
-        .map_err(|_| LexingError::Todo)
+        .map_err(|_| LexingError::UnknownParseError)
 }
 
 #[cfg(test)]
