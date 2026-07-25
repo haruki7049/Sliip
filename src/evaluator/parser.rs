@@ -1,13 +1,10 @@
 //! # lll parser
 
-mod constants;
 mod types;
 
 use chumsky::prelude::*;
 use thiserror::Error;
 use types::*;
-
-use crate::evaluator::parser::constants::keywords;
 
 pub fn parse() -> Result<Programs, ParseError> {
     todo!()
