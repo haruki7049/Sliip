@@ -76,9 +76,6 @@ pub enum LexingError {
 
 pub fn tokenize(src: &str) -> Result<Vec<Token>, LexingError> {
     Token::lexer(src)
-        .map_ok(|token| match token {
-            other => other,
-        })
         .try_collect()
         .map_err(|_| LexingError::Todo)
 }
