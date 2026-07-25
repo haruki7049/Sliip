@@ -76,8 +76,8 @@ pub enum LexingError {
     UnknownParseError,
 }
 
-pub fn tokenize(src: &str) -> Result<Vec<Token>, LexingError> {
-    Token::lexer(src)
+pub fn tokenize(source: &str) -> Result<Vec<Token>, LexingError> {
+    Token::lexer(source)
         .try_collect()
         .map_err(|_| LexingError::UnknownParseError)
 }
