@@ -1,6 +1,6 @@
 //! # lll parser
 
-use crate::machine::lexer::{LexingError, Token, tokenize};
+use crate::machine::lexer;
 use chumsky::prelude::*;
 use chumsky::{Parser, error::Rich, extra};
 use std::rc::Rc;
@@ -23,20 +23,15 @@ pub enum Type {
 }
 
 pub fn parse(source: &str) -> Result<Vec<SExpression>, ParseError> {
-    let tokens: Vec<Token> = tokenize(source)?;
+    let tokens: Vec<lexer::Token> = lexer::tokenize(source)?;
 
     todo!()
-}
-
-pub fn define<'src>()
--> impl Parser<'src, &'src Vec<Token>, SExpression, extra::Err<Rich<'src, char>>> {
-    just(Token::Define)
 }
 
 #[derive(Debug, Error, PartialEq, Clone)]
 pub enum ParseError {
     #[error("from lexer: {0:?}")]
-    Lexing(#[from] LexingError),
+    Lexing(#[from] lexer::LexingError),
 }
 
 #[cfg(test)]
