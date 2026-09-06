@@ -8,7 +8,7 @@ use thiserror::Error;
 #[derive(Logos, Debug, PartialEq, Clone)]
 #[logos(error = LexingError)]
 #[logos(skip r"[ \t\n\f]+")]
-#[logos(skip(r";[^\n]*", allow_greedy = true))]
+#[logos(skip(r";[^\r\n]*", allow_greedy = true))]
 pub enum Token {
     /// Integer number
     #[regex("-?[0-9]+", |lex| lex.slice().parse())]
@@ -63,16 +63,21 @@ impl From<std::num::ParseFloatError> for LexingError {
     }
 }
 
+// TODO: Create Unterminated error
+// #[error("Unterminated litetal / S expresion: {0}")]
+// Unterminated(char),
 #[derive(Debug, Error, PartialEq, Clone, Default)]
 pub enum LexingError {
+    // TODO: Rename FloatParseError to Float(f64)
     #[error("Float parse error")]
     FloatParseError,
 
+    // TODO: Rename IntegerParseError to Integer(i64)
     #[error("Integer parse error")]
     IntegerParseError,
 
-    #[error("Unknown parse error")]
     #[default]
+    #[error("Unknown parse error")]
     UnknownParseError,
 }
 
@@ -84,9 +89,8 @@ pub fn tokenize(source: &str) -> Result<Vec<Token>, LexingError> {
 
 #[cfg(test)]
 mod tests {
+    use super::{LexingError, Token, tokenize};
     use std::rc::Rc;
-
-    use crate::machine::lexer::{LexingError, Token, tokenize};
 
     #[test]
     fn sexp_invalid() -> anyhow::Result<()> {

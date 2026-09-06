@@ -36,8 +36,8 @@ pub enum ParseError {
 
 #[cfg(test)]
 mod tests {
-    use crate::machine::parser::{Atom, SExpression, Type, parse};
-    use std::rc::Rc;
+    // use crate::machine::parser::{Atom, SExpression, Type, parse};
+    // use std::rc::Rc;
 
     // #[test]
     // fn sexp_invalid() -> anyhow::Result<()> {
