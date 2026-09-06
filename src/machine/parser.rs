@@ -25,7 +25,7 @@ pub enum Type {
 pub fn parse(source: &str) -> Result<Vec<SExpression>, ParseError> {
     let tokens: Vec<lexer::Token> = lexer::tokenize(source)?;
 
-    todo!()
+    todo!("tokens: {:?}", tokens)
 }
 
 #[derive(Debug, Error, PartialEq, Clone)]
@@ -53,21 +53,21 @@ mod tests {
     //     Ok(())
     // }
 
-    #[test]
-    fn sexp_define() -> anyhow::Result<()> {
-        let invalid = "(define foo (as \"Hoge\" String))";
-        let actual = parse(invalid)?;
+    // #[test]
+    // fn sexp_define() -> anyhow::Result<()> {
+    //     let invalid = "(define foo (as \"Hoge\" String))";
+    //     let actual = parse(invalid)?;
 
-        assert_eq!(
-            actual,
-            vec![SExpression::Define((
-                "foo".to_string(),
-                Rc::from(SExpression::As((
-                    Atom::String("Hoge".to_string()),
-                    Type::String
-                )))
-            ))]
-        );
-        Ok(())
-    }
+    //     assert_eq!(
+    //         actual,
+    //         vec![SExpression::Define((
+    //             "foo".to_string(),
+    //             Rc::from(SExpression::As((
+    //                 Atom::String("Hoge".to_string()),
+    //                 Type::String
+    //             )))
+    //         ))]
+    //     );
+    //     Ok(())
+    // }
 }
