@@ -1,9 +1,8 @@
 # lll
 
-A joke Lisp interpreter by Haskell
-
-## How to run
+## Build
 
 ```bash
-stack run -- examples/hello-sliip.sliip
+cargo build
+cargo build --release
 ```
